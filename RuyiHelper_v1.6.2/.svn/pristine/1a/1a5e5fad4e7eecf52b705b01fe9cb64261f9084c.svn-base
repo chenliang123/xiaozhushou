@@ -1,0 +1,1090 @@
+﻿using RueHelper.util;
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.IO;
+using System.Linq;
+using System.Runtime.Serialization;
+using System.Text;
+using System.Web.Script.Serialization;
+using System.Windows.Forms;
+
+namespace RueHelper
+{
+    [DataContract]
+    class Global
+    {
+        private static System.Configuration.Configuration config = System.Configuration.ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+        private static log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        private static RueSqlite m_db = new RueSqlite();
+        public static string m_Exe = "如e小助手.exe";
+        private static string m_hdip = "";
+        private static string m_hdid = "";
+        public static string HOST = "";
+        public static string url_hd = "";
+        public static string url_class = "";
+        public static string url_assistant = "";
+        public static string url_recv = "";
+        //public static CoursetableDay[] m_coursetable;
+
+        private static int m_schoolid = 0;
+        private static string m_schoolauthcode = "";
+
+        private static int m_classid = 0;
+        private static int m_grade = 0;
+        private static string m_WiFi = "";
+        private static string m_classname = "";
+        private static string m_schoolname = "";
+        private static int m_lessonid = 0;//经常没有
+        private static int m_lessonindex = 0;//经常没有
+        private static int m_courseid = 0;
+        private static string m_coursename = "";
+
+        private static int m_teacherid = 0;
+        private static string m_padip = "";
+
+        private static string m_version = "";//小助手版本
+        private static UpdateItem m_RyktUpdateInfo = null;
+        private static string m_timeon = "";//上课时间
+        private static string m_timeoff = "";//下课时间
+        private static int m_lessonIndex = 0;//第几节课
+        private static bool m_lessonOff = true;
+        private static bool m_autorun = false;
+        private static bool m_autoUpdate = false;
+        private static bool m_PublicClassroom = false;
+        private static bool m_debug = false;
+        private static bool m_sound = false;
+        private static bool m_camera = false;
+        private static int m_SummaryType = 1;
+        private static bool m_soundCallname = false;
+        private static bool m_soundReward = false;
+        private static bool m_PPTMaximize = false;
+        private static int m_hdPassiveMode = 1;//采集器被动模式
+        private static int m_UploadInvalidData = 0;
+        public static string g_ClassInfoStr = "";
+        public static string g_SchoolInfoStr = "";
+        public static ClassInfo g_ClassInfo;
+        public static StudentInfo[] g_StudentInfoArray;
+        public static Classes[] g_szClasses;
+        public static AwardType[] g_szAwardType;
+        public static User[] g_TeacherArray;
+        public static List<User> g_Studentlist = new List<User>();
+        public static Grouplist m_grouplist = null;
+        public static string toString()
+        {
+            string ret = "school: id="+m_schoolid+", name="+m_schoolname;
+            ret += "class: id="+m_classid+", name="+m_classname;
+            return ret;
+        }
+        public Global()
+        {
+            //读取配置文件
+            loadSchoolConfig();
+
+            //根据配置文件读取本地缓存
+            loadSchoolInfo_Local();
+
+            try
+            {
+                string debugMode = config.AppSettings.Settings["debug"].Value;
+                if (debugMode == null || debugMode.Length == 0)
+                    m_debug = false;
+                else if (debugMode == "1")
+                    m_debug = true;
+            }
+            catch (Exception e)
+            {
+                //...
+                m_debug = false;
+            }
+            Log.Info("Global.4");
+            try
+            {
+                string soundMode = config.AppSettings.Settings["sound"].Value;
+                if (soundMode == null || soundMode.Length == 0)
+                    m_sound = false;
+                else if (soundMode == "1")
+                    m_sound = true;
+            }
+            catch (Exception e)
+            {
+                //...
+                m_sound = false;
+            }
+            try
+            {
+                string soundCallname = config.AppSettings.Settings["soundCallname"].Value;
+                if (soundCallname == null || soundCallname.Length == 0)
+                    m_soundCallname = false;
+                else if (soundCallname == "1")
+                    m_soundCallname = true;
+            }
+            catch (Exception e)
+            {
+                //...
+                m_sound = false;
+            }
+            try
+            {
+                string soundReward = config.AppSettings.Settings["soundReward"].Value;
+                if (soundReward == null || soundReward.Length == 0)
+                    m_soundReward = false;
+                else if (soundReward == "1")
+                    m_soundReward = true;
+            }
+            catch (Exception e)
+            {
+                //...
+                m_sound = false;
+            }
+
+            try
+            {
+                string val = config.AppSettings.Settings["autorun"].Value;
+                Log.Info("Global.6 autorun=" + val);
+                if (val == null || val.Length == 0)
+                    m_autorun = false;
+                else if (val == "1")
+                    m_autorun = true;
+            }
+            catch (Exception e)
+            {
+                //...
+                m_autorun = false;
+            }
+
+            try
+            {
+                string autoUpdate = config.AppSettings.Settings["AutoUpdate"].Value;
+                Log.Info("Global.6 autoUpdate=" + autoUpdate);
+                if (autoUpdate == null || autoUpdate.Length == 0)
+                    m_autoUpdate = false;
+                else if (autoUpdate == "1")
+                    m_autoUpdate = true;
+            }
+            catch (Exception e1)
+            {
+                //...
+                m_autoUpdate = false;
+            }
+
+            try
+            {
+                string PassiveMode = config.AppSettings.Settings["hdPassive"].Value;
+                if (PassiveMode == null || PassiveMode.Length == 0)
+                    PassiveMode = "1";
+                m_hdPassiveMode = Int32.Parse(PassiveMode);
+            }
+            catch (Exception e)
+            {
+                //...
+            }
+            Log.Info("hdPassive=" + m_hdPassiveMode);
+
+            HOST = config.AppSettings.Settings["host"].Value;
+            url_hd = "http://" + HOST + "/hd.do?";
+            url_class = "http://" + HOST + "/class.do?";
+            url_assistant = "http://" + HOST + "/assistant.do?";
+
+            Log.Info("Global.6");
+
+            if (url_hd == null || url_hd.Length < 10)
+                throw new Exception("url_hd Error.");
+            if (url_class == null || url_class.Length < 10)
+                throw new Exception("url_class Error.");
+            if (url_assistant == null || url_assistant.Length < 10)
+                throw new Exception("url_assistant Error.");
+        }
+        public static bool IsPublicClassroom()
+        {
+            return m_PublicClassroom;
+        }
+        public static void setPublicClassroom(string val)
+        {
+            if(val.Length==0)
+            {
+                m_PublicClassroom = false;
+                Global.saveConfigIni("PublicClassroom", "0");
+            }
+            else
+            {
+                int nVal = Util.toInt(val);
+                if (nVal == 1)
+                    m_PublicClassroom = true;
+                else
+                    m_PublicClassroom = false;
+            }
+
+        }
+
+        public static string GetAuthcode()
+        {
+            return "";
+        }
+        private static void loadSchoolConfig()
+        {
+            // 写入ini  
+            Ini ini = new Ini(Application.StartupPath + "\\App.ini");
+            Log.Info("Global.1");
+            setSchoolID(Util.toInt(ini.Read("CLASSROOM", "SchoolID")));
+            setSchoolAuthcode(ini.Read("CLASSROOM", "SchoolAuthcode"));
+            setPPTMaximize(ini.Read("CLASSROOM", "PPTMaximize"));
+            setClassID(ini.Read("CLASSROOM", "ClassID"));
+            setHDIP(ini.Read("CLASSROOM", "HDIP"));
+            setWiFi(ini.Read("CLASSROOM", "WiFi"));
+            setAutorun(Util.toInt(ini.Read("CLASSROOM", "Autorun")));
+            setPublicClassroom(ini.Read("CLASSROOM", "PublicClassroom"));
+            setSummaryType(ini.Read("CLASSROOM", "SummaryType"));
+
+            setCamera(ini.Read("Camera", "Enable"));
+
+
+            if (m_hdip == null || m_hdip.Length < 10)
+                throw new Exception("m_hdip Error.");
+
+            Ini ini2 = new Ini(Application.StartupPath + "\\update.ini");
+            Log.Info("Global.2");
+            m_version = ini2.Read("update", "version");
+
+            //TODO: 获取学校名称,班级名称
+        }
+        public static void saveConfigIni(string property, string value)
+        {
+            Ini ini = new Ini(Application.StartupPath + "\\App.ini");
+            ini.Write("CLASSROOM", property, value);
+        }
+        public static void saveSchoolConfig(string hdip,bool bAutorun)
+        {
+            Ini ini = new Ini(Application.StartupPath + "\\App.ini");
+            ini.Write("CLASSROOM", "HDIP", hdip);
+
+            if(bAutorun)
+                ini.Write("CLASSROOM", "Autorun", "1");
+            else
+                ini.Write("CLASSROOM", "Autorun", "0");
+            setHDIP(hdip);
+            m_autorun = bAutorun;
+        }
+        public static void saveClassConfig(int classid, string name)
+        {
+            Ini ini = new Ini(Application.StartupPath + "\\App.ini");
+            ini.Write("CLASSROOM", "ClassId", classid+"");
+            setClassID(classid);
+            setClassname(name);
+        }
+        public static void saveSchoolConfig(int schoolid, string authcode)
+        {
+            Ini ini = new Ini(Application.StartupPath + "\\App.ini");
+            ini.Write("CLASSROOM", "SchoolID", schoolid + "");
+            ini.Write("CLASSROOM", "SchoolAuthcode", authcode + "");
+            m_schoolid = schoolid;
+            m_schoolauthcode = authcode;
+        }
+        public static int getSeatByUid(int uid)
+        {
+            if (uid == 0)
+                return 0;
+
+            int seat = 0;
+            foreach (StudentInfo s in g_StudentInfoArray)
+            {
+                int _uid  = Util.toInt(s.ID);
+                int _seat = Util.toInt(s.SEAT.Replace("-", ""));
+                if (_uid == uid)
+                    seat = _seat;
+            }
+            return seat;
+        }
+        public static StudentInfo getStudentByUid(int uid)
+        {
+            int seat = 0;
+            foreach (StudentInfo s in g_StudentInfoArray)
+            {
+                int _uid = Util.toInt(s.ID);
+                int _seat = Util.toInt(s.SEAT.Replace("-", ""));
+                if (_uid == uid)
+                    return s;
+            }
+            return null;
+        }
+        public static int getUidBySeat(int seat)
+        {
+            if (seat == 0)
+                return 0;
+
+            int uid = 0;
+            foreach (StudentInfo s in g_StudentInfoArray)
+            {
+                int _uid = Util.toInt(s.ID);
+                int _seat = Util.toInt(s.SEAT.Replace("-",""));
+                if (_seat == seat)
+                    uid = _uid;
+            }
+            return uid;
+        }
+        public static StudentInfo getUserInfoBySeat(int seat)
+        {
+            StudentInfo si = null;
+            string name = "";
+            foreach (StudentInfo s in g_StudentInfoArray)
+            {
+                int _seat = Util.toInt(s.SEAT.Replace("-", ""));
+                if (_seat == seat)
+                    si = s;
+            }
+            return si;
+        }
+        public static string getUsernameBySeat(int seat)
+        {
+            if (seat == 0)
+                return "";
+
+            string name = "";
+            foreach (StudentInfo s in g_StudentInfoArray)
+            {
+                int _seat = Util.toInt(s.SEAT.Replace("-", ""));
+                if (_seat == seat)
+                    name = s.Name; ;
+            }
+            return name;
+        }
+        public static string getUsernameById(int uid)
+        {
+            if (uid == 0)
+                return "";
+
+            string name = "";
+            foreach (StudentInfo s in g_StudentInfoArray)
+            {
+                int _id = Util.toInt(s.ID.Replace("-", ""));
+                if (uid == _id)
+                    name = s.Name; ;
+            }
+            return name;
+        }
+        public static StudentInfo getUserInfoById(int uid)
+        {
+            if (uid == 0)
+                return null;
+            StudentInfo r = null;
+            foreach (StudentInfo s in g_StudentInfoArray)
+            {
+                int _id = Util.toInt(s.ID);
+                if (uid == _id)
+                    r = s;
+            }
+            r.SEAT = r.SEAT.Replace("-", "");
+            return r;
+        }
+        public static string setSeat(int uid, string seat)
+        {
+            g_ClassInfo = JsonOper.DeserializeJsonToObject<ClassInfo>(g_ClassInfoStr);
+            string ret = "";
+            int i = 0;
+            string uid1="", uid0="";
+            string seat1 = "", seat0 = "";
+            string name1 = "", name0 = "";
+            foreach (StudentInfo s in g_ClassInfo.Data.Student)
+            {
+                int _uid = Int32.Parse(s.ID);
+                if (s.SEAT == seat)
+                {
+                    g_ClassInfo.Data.Student[i].SEAT = "";
+                    ret =g_ClassInfo.Data.Student[i].ID +":" + g_ClassInfo.Data.Student[i].Name + ":null, ";
+                    
+                    uid0 = g_ClassInfo.Data.Student[i].ID;
+                    seat0 = "";
+                    name0 = g_ClassInfo.Data.Student[i].Name;
+
+                    m_db.setSeat(_uid, "");
+                    break;
+                }
+                i++;
+                
+            }
+            i = 0;
+            foreach (StudentInfo s in g_StudentInfoArray)
+            {
+                int _uid = Int32.Parse(s.ID);
+                if (_uid == uid)
+                {
+                    g_ClassInfo.Data.Student[i].SEAT = seat;
+
+                    uid1 = g_ClassInfo.Data.Student[i].ID;
+                    name1 = g_ClassInfo.Data.Student[i].Name;
+                    seat1 = seat;
+
+                    m_db.setSeat(_uid, seat);
+                    ret += g_ClassInfo.Data.Student[i].ID + ":" + g_ClassInfo.Data.Student[i].Name + ":"+seat;
+                    break;
+                }
+                i++;
+            }
+            string str = new JavaScriptSerializer().Serialize(g_ClassInfo);
+            g_ClassInfoStr = str;
+            string data = "{\"uid\":\"P1\",\"seat\":\"P2\",\"name\":\"P3\",\"uid0\":\"P4\",\"seat0\":\"P5\",\"name0\":\"P6\"}";
+            data = data.Replace("P1", uid1 + "").Replace("P2", seat1.Replace("-", "")).Replace("P3", name1.Replace("-", ""));
+            data = data.Replace("P4", uid0 + "").Replace("P5", seat0.Replace("-", "")).Replace("P6", name0.Replace("-", ""));
+
+            //string str = "{\"ret\":\"P1\",\"msg\":\"P2\",\"data\":\"P3\"}".Replace("P1", ""+ret).Replace("P2", msg).Replace("P3", data);
+            return data;
+        }
+        public static bool loadClassInfo()
+        {
+            if (m_classid == -1)
+                return false;
+
+            Classes c = m_db.getClassById(m_classid);
+            if (c != null)
+            {
+                Global.setClassID(c.id);
+                Global.setClassname(c.name);
+                Global.setGrade(c.grade);
+            }
+
+            string dir = Application.StartupPath + "\\conf\\";
+            string filename = m_schoolid + "-" + m_classid + ".conf";
+            FileOper fo = new FileOper(dir,filename);
+
+            string strClassInfo = Common.getClassInfo();
+            if (strClassInfo.Length > 0)
+            {
+                //更新本地缓存
+                fo.WriteFile(strClassInfo);
+
+                g_ClassInfoStr = strClassInfo;
+                Log.Info("Global.loadClassInfo() ...2-ok!");
+                Log.Debug(g_ClassInfoStr);
+            }else{
+                Log.Error("getClassInfo error.");
+                g_ClassInfoStr = fo.ReadFile();
+                Log.Error("Global.loadClassInfo() ...2-err..." + g_ClassInfoStr);
+            }
+
+            if (g_ClassInfoStr.Length > 0)
+            {
+                g_ClassInfo = JsonOper.DeserializeJsonToObject<ClassInfo>(g_ClassInfoStr);
+                g_StudentInfoArray = g_ClassInfo.Data.Student;
+                g_TeacherArray = g_ClassInfo.Data.Teacher;
+                int nClassID = g_ClassInfo.Data.ID;
+                int nGrade = g_ClassInfo.Data.Grade;
+                Global.setGrade(nGrade);
+                Global.setClassID(nClassID);
+                Global.setClassname(g_ClassInfo.Data.Name);
+                Global.setUploadInvalidData(g_ClassInfo.Data.UploadInvalidData);
+                g_Studentlist.Clear();
+
+                foreach (StudentInfo s in g_StudentInfoArray)
+                {
+                    User u = new User();
+                    u.id = Int32.Parse(s.ID);
+                    u.name = s.Name;
+                    u.seat = s.SEAT.Replace("-", "");
+                    u.type = 2;//student
+                    u.schoolid = m_schoolid;
+                    u.classid = nClassID;
+                    u.imageurl = s.imageurl;
+                    string pinying = Util.GetPinyin(s.Name);
+                    u.pinying = pinying;
+                    s.pinyin = pinying;
+                    //u.classname = Global.getClassname();
+                    g_Studentlist.Add(u);
+                }
+
+                //write to RueSqlite.db
+                {
+                    //更新学生信息
+                    if (g_Studentlist.Count > 0)
+                    {
+                        int nDel = m_db.delUser(nClassID, 2);
+                        int nAdd = m_db.addUser(g_Studentlist);
+                        int a = nDel;
+                    }
+                }
+            }
+            return true;
+        }
+
+        public static int loadSchoolInfo()
+        {
+            return loadSchoolInfo(m_schoolid, m_schoolauthcode);
+        }
+        public static int loadSchoolInfo(int schoolid,string authcode)
+        {
+            int ret = 0;
+
+            string dir = Application.StartupPath + "\\conf\\";
+            string filename = schoolid + ".conf";
+            FileOper fo = new FileOper(dir, filename);
+
+            string strSchoolInfo = Common.getSchoolInfo(schoolid,authcode);
+            if (strSchoolInfo.Length > 0)
+            {
+                SchoolInfo info = JsonOper.DeserializeJsonToObject<SchoolInfo>(strSchoolInfo);
+                if (info.schoolid > 0)
+                {
+                    Global.saveSchoolConfig(schoolid, authcode);
+                    g_szAwardType = info.awardtypelist;
+                    //更新本地缓存
+                    fo.WriteFile(strSchoolInfo);
+                    g_SchoolInfoStr = strSchoolInfo;
+                    Log.Info("Global.loadSchoolInfo() ...2-ok!");
+                    Log.Debug(g_SchoolInfoStr);
+
+                    ret = 1;
+                }
+            }
+            else
+            {
+                Log.Info("getSchoolInfo error, load from conf now...");
+                string data = fo.ReadFile();
+                if (data.Length > 0)
+                {
+                    g_SchoolInfoStr = data;
+                    ret = 2;
+                }
+
+                Log.Info("Global.loadSchoolInfo() ...2-err..." + g_SchoolInfoStr);
+            }
+
+            //if (strSchoolInfo.Length > 0)
+            if (ret == 1)
+            {
+                SchoolInfo info = JsonOper.DeserializeJsonToObject<SchoolInfo>(g_SchoolInfoStr);
+                User[] si = info.teacherlist;
+                List<User> teacherlist = new List<User>();
+                foreach (User u in si)
+                {
+                    teacherlist.Add(u);
+                }
+
+                int nDel = m_db.delTeachers(m_schoolid);
+                int nAdd = m_db.addUser(teacherlist);
+                int a = nDel;
+                Global.setSchoolID(schoolid);
+                Global.setSchoolname(info.schoolname);
+                m_db.delSchool(info.schoolid);
+                m_db.addSchool(info.schoolid, info.schoolname);
+
+                g_szClasses = info.classlist;
+                int nClassDel = m_db.delClassBySchoolid(m_schoolid);
+                int nClassAdd = 0;
+                foreach (Classes c in g_szClasses)
+                {
+                    nClassAdd += m_db.addClass(c);
+                }
+                Log.Info("Global.loadSchoolInfo() nClassDel=" + nClassDel + ", nClassAdd=" + nClassAdd);
+
+                string coursetimes = info.coursetime;
+                m_db.delCourseTime();
+                m_db.addCourseTime(coursetimes);
+                Log.Info("Global.loadSchoolInfo() Over.");
+                g_SchoolInfoStr = strSchoolInfo;
+            }
+            else if(ret==2)
+            {
+                Log.Info("getSchoolInfo error.");
+
+                SchoolInfo info = JsonOper.DeserializeJsonToObject<SchoolInfo>(g_SchoolInfoStr);
+                User[] si = info.teacherlist;
+                List<User> teacherlist = new List<User>();
+                foreach (User u in si)
+                {
+                    teacherlist.Add(u);
+                }
+                Global.setSchoolID(schoolid);
+                Global.setSchoolname(info.schoolname);
+                g_szClasses = info.classlist;
+            }
+            if (g_SchoolInfoStr.Length == 0)
+                return -1;
+            else
+                return 1;
+        }
+
+        private static int loadSchoolInfo_Local()
+        {
+            string dir = Application.StartupPath + "\\conf\\";
+            string filename = m_schoolid + ".conf";
+            
+            FileOper fo = new FileOper(dir, filename);
+            string data = fo.ReadFile();
+            if(data.Length > 0)
+            {
+                //TODO: 如果文件中有,从文件中获取
+                //TODO: 如果文件中没有,则从DB中获取
+                g_SchoolInfoStr = data;
+
+                SchoolInfo info = JsonOper.DeserializeJsonToObject<SchoolInfo>(data);
+                Global.setSchoolname(info.schoolname);
+                g_szClasses = info.classlist;
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        public static bool Debug()
+        {
+            return m_debug;
+        }
+        public static bool Sound()
+        {
+            return m_sound;
+        }
+        public static bool playCallname()
+        {
+            return m_soundCallname;
+        }
+        public static bool playReward()
+        {
+            return m_soundReward;
+        }
+        public static string getHDIP()
+        {
+            return m_hdip;
+        }
+        public static void setHDIP(string v)
+        {
+            m_hdip = v;
+            url_recv = "http://" + m_hdip + "/EduApi/hd.do?";
+        }
+        public static void setHDID(string v)
+        {
+            m_hdid = v;
+        }
+        public static string getHDID()
+        {
+            return m_hdid;
+        }
+        public static bool getAutorun()
+        {
+            return m_autorun;
+        }
+        public static bool getAutoUpdate()
+        {
+            return m_autoUpdate;
+        }
+        public static void setAutorun(int v)
+        {
+            if (v == 1)
+                m_autorun = true;
+            else
+                m_autorun = false;
+        }
+        public static void setAutoUpdate(int v)
+        {
+            if (v == 1)
+                m_autoUpdate = true;
+            else
+                m_autoUpdate = false;
+            writeCfg("autoupdate", v + "");
+        }
+        
+        public static void setSoundHandon(int v)
+        {
+            if (v == 1)
+                m_sound = true;
+            else
+                m_sound = false;
+            writeCfg("sound", v + "");
+        }
+        public static void setSoundCallname(int v)
+        {
+            if (v == 1)
+                m_soundCallname = true;
+            else
+                m_soundCallname = false;
+            writeCfg("soundCallname", v+"");
+        }
+        public static void setSoundReward(int v)
+        {
+            if (v == 1)
+                m_soundReward = true;
+            else
+                m_soundReward = false;
+            writeCfg("soundReward", v+"");
+        }
+        public static string getSoundConfig()
+        {
+            string v1 = m_sound ? "1" : "0";
+            string v2 = m_soundCallname ? "1" : "0";
+            string v3 = m_soundReward ? "1" : "0";
+
+            string ret = "{\"handon\":\"P1\",\"callname\":\"P2\",\"reward\":\"P3\"}".Replace("P1", v1).Replace("P2", v2).Replace("P3", v3);
+            return ret;
+        }
+        public static int getSchoolID()
+        {
+            return m_schoolid;
+        }
+        public static void setSchoolID(int id)
+        {
+            m_schoolid = id;
+        }
+        public static void setSchoolAuthcode(string v)
+        {
+            m_schoolauthcode = v;
+        }
+        public static string getPadIP()
+        {
+            return m_padip;
+        }
+        public static void setPadIP(string ip)
+        {
+            m_padip = ip;
+        }
+
+        public static string getTimeOn()
+        {
+            return m_timeon;
+        }
+        public static void setTimeOn(string str)
+        {
+            m_timeon = str;
+        }
+        public static string getTimeOff()
+        {
+            return m_timeoff;
+        }
+        public static void setTimeOff(string str)
+        {
+            m_timeoff = str;
+        }
+
+        public static List<int> getStudentIdList()
+        {
+            List<int> list = new List<int>();
+            if (g_Studentlist != null && g_Studentlist.Count > 0)
+            {
+                foreach (User u in g_Studentlist)
+                {
+                    list.Add(u.id);
+                }
+            }
+            return list;
+        }
+        public static int getClassID()
+        {
+            return m_classid;
+        }
+        public static void setClassID(int id)
+        {
+            m_classid = id;
+        }
+        public static void setClassID(string id)
+        {
+            m_classid = Util.toInt(id);
+        }
+        public static void setSummaryType(string id)
+        {
+            m_SummaryType = Util.toInt(id);
+        }
+        public static int getSummaryType()
+        {
+            return m_SummaryType;
+        }
+        public static int getGrade()
+        {
+            return m_grade;
+        }
+        public static int getGroupId()
+        {
+            if (m_grouplist != null)
+                return m_grouplist.id;
+            else
+                return 0;
+        }
+        public static void setGrade(int id)
+        {
+            m_grade = id;
+        }
+        public static void setGroup(string ret)
+        {
+            if (ret.Length > 0)
+            {
+                m_grouplist = JsonOper.DeserializeJsonToObject<Grouplist>(ret);
+            }
+        }
+        public static void updateGroup(string data)
+        {
+            if (data.Length > 0 && m_grouplist!=null)
+            {
+                m_grouplist.grouplist = null;
+                
+                //A:3919,3926,3945,4218,4224,4232,3933,3948,3918,3954,4236,4233,4225,4219,3931,3920,3946,3953,3950,4226,3936,3935;B:4234,3921,3929,3930,3938,4214,4221,4228,4235,3952,3944,3928,4229,4222,4215,3942;C:3923,4217,4223,4231,3937,3939,3924
+                string[] szG = data.Split(';');
+                m_grouplist.grouplist = new Group[szG.Length];
+                for(int i=0; i<szG.Length; i++)
+                {
+                    string[] szPair = szG[i].Split(':');
+                    if (szPair != null && szPair.Length == 2)
+                    {
+                        m_grouplist.grouplist[i] = new Group();
+                        m_grouplist.grouplist[i].name = szPair[0];
+                        m_grouplist.grouplist[i].uids = szPair[1];
+                    }
+                }
+            }
+        }
+        public static void rewardGroup(string groupname, int point)
+        {
+            if (m_grouplist!=null)
+            {
+                for(int i=0; i< m_grouplist.grouplist.Count(); i++)
+                {
+                    if (groupname == m_grouplist.grouplist[i].name)
+                        m_grouplist.grouplist[i].point += point;
+                }
+            }
+        }
+        public static List<Group> getGroupRanking()
+        {
+            List<Group> list = new List<Group>();
+            if (m_grouplist != null)
+            {
+                //创建模拟数据
+                //Random r = new Random();
+                //for(int i=0; i<m_grouplist.grouplist.Count(); i++)
+                //{
+                //    m_grouplist.grouplist[i].point = r.Next(0, 20);
+                //}
+
+
+                int max = 0;
+                HashSet<string> nameSet = new HashSet<string>();
+                string[] szName = new string[10];
+                int k = 0;
+                try
+                {
+                    for (; k < 10 && k < m_grouplist.grouplist.Count(); k++)
+                    {
+                        max = -1;
+                        for (int i = 0; i < m_grouplist.grouplist.Count(); i++)
+                        {
+                            Group g = m_grouplist.grouplist[i];
+                            if (g.point > max && !nameSet.Contains(g.name))
+                            {
+                                if (list.Count <= k)
+                                    list.Add(g);
+                                else
+                                    list[k] = g;
+                                max = g.point;
+                            }
+                        }
+                        nameSet.Add(list[k].name);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Error("getGroupRanking: "+e.Message);
+                }
+                
+            }
+            return list;
+        }
+        public static string getClassname()
+        {
+            return m_classname;
+        }
+        public static void setClassname(string str)
+        {
+            m_classname = str;
+        }
+        public static string getSchoolname()
+        {
+            return m_schoolname;
+        }
+        public static void setSchoolname(string str)
+        {
+            m_schoolname = str;
+        }
+        public static int getLessonID()
+        {
+            return m_lessonid;
+        }
+        public static void setLessonID(int id)
+        {
+            if (id == 0)
+            {
+                m_lessonOff = true;
+            }
+            else
+            {
+                m_lessonOff = false;
+            }
+            m_lessonid = id;
+        }
+        public static void setLessonOff()
+        {
+            m_lessonOff = true;
+        }
+
+        public static bool isLessonOff()
+        {
+            return m_lessonOff;
+        }
+
+        public static int getLessonIndex()
+        {
+            return m_lessonindex;
+        }
+        public static void setLessonIndex(int n)
+        {
+            m_lessonindex = n;
+            CourseTime ct = m_db.getCourseTime(n);
+            if(ct!=null)
+            {
+                m_timeon = ct.timeOn;
+                m_timeoff = ct.timeOff;
+            }
+
+        }
+        public static int getCourseID()
+        {
+            return m_courseid;
+        }
+        public static void setCourseID(int id)
+        {
+            m_courseid = id;
+        }
+
+        public static int getTeacherID()
+        {
+            return m_teacherid;
+        }
+        public static void setTeacherID(int id)
+        {
+            m_teacherid = id;
+        }
+
+        public static string getCourseName()
+        {
+            return m_coursename;
+        }
+
+        public static string getVersion()
+        {
+            return m_version;
+        }
+        public static bool getPPTMaximize()
+        {
+            return m_PPTMaximize;
+        }
+        public static void setPPTMaximize(string v)
+        {
+            v = v.Trim();
+            if (v == "1")
+                m_PPTMaximize = true;
+            else
+                m_PPTMaximize = false;
+        }
+        public static void setCamera(string v)
+        {
+            v = v.Trim();
+            if (v == "1")
+                m_camera = true;
+            else
+                m_camera = false;
+        }
+
+        public static UpdateItem getRyktUpdateInfo()
+        {
+            return m_RyktUpdateInfo;
+        }
+        public static void setRyktUpdateInfo(UpdateItem v)
+        {
+            m_RyktUpdateInfo = v;
+        }
+        public static void setCourseName(string str)
+        {
+            m_coursename = str;
+        }
+        public static bool isHDPassive()
+        {
+            if (m_hdPassiveMode == 1)
+                return true;
+            else
+                return false;
+        }
+        public static bool isWithCamera()
+        {
+            string path = Application.StartupPath+"\\OpenNetStream.dll";
+            if (!File.Exists(path))
+                return false;
+            return m_camera;
+        }
+        public static bool isUploadInvalidData()
+        {
+            if (m_UploadInvalidData == 1)
+                return true;
+            else
+                return false;
+        }
+        public static void setUploadInvalidData(int v)
+        {
+            m_UploadInvalidData = v;
+        }
+        private static void writeCfg(string key,string value)
+        {
+            try
+            {
+                Configuration cfa = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                try
+                {
+                    cfa.AppSettings.Settings[key].Value = value;
+                }
+                catch (Exception e)
+                {
+                    cfa.AppSettings.Settings.Add(key, value);
+                }
+                cfa.Save();
+                ConfigurationManager.RefreshSection("appSettings");// 刷新命名节，在下次检索它时将从磁盘重新读取它。记住应用程序要刷新节点
+            }catch(Exception e0){
+                Log.Error(e0.Message);
+            }
+        }
+
+        public static int checkLesson(int courseid,int lessonid)
+        {
+            if (m_courseid == 0 && courseid != 0)
+            {
+                m_courseid = courseid;
+
+                foreach (User u in Global.g_TeacherArray)
+                {
+                    if (m_courseid == u.courseid)
+                    {
+                        m_teacherid = u.id;
+                        break;
+                    }
+                }
+            }
+
+            if (m_lessonid == 0 && lessonid != 0)
+            {
+                m_lessonid = lessonid;
+                Common.getLessonAsync();
+                Log.Info("reload Lesson: " + m_lessonid + ", pad.lessonid=" + lessonid);
+            }
+                
+
+            return 1;
+        }
+
+        public static void setWiFi(string str)
+        {
+            m_WiFi = str;
+
+            Ini ini = new Ini(Application.StartupPath + "\\App.ini");
+            ini.Write("CLASSROOM", "WiFi", m_WiFi);
+        }
+        public static string getWiFi()
+        {
+            return m_WiFi;
+        }
+    }
+}

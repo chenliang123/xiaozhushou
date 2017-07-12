@@ -1,0 +1,7 @@
+D:\如e小助手_Release\RueUpdate.exe.config
+D:\如e小助手_Release\RueUpdate.exe
+D:\App\RuyiHelper_v1.6.2\Update\obj\Release\Update.csprojResolveAssemblyReference.cache
+D:\App\RuyiHelper_v1.6.2\Update\obj\Release\Update.FormUpdate.resources
+D:\App\RuyiHelper_v1.6.2\Update\obj\Release\Update.Properties.Resources.resources
+D:\App\RuyiHelper_v1.6.2\Update\obj\Release\Update.csproj.GenerateResource.Cache
+D:\App\RuyiHelper_v1.6.2\Update\obj\Release\RueUpdate.exe

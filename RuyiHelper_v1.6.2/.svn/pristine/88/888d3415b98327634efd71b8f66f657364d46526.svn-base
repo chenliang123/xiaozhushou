@@ -1,0 +1,858 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F0D0025E-4858-4387-922D-FA2689580AAA}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>RueHelper</RootNamespace>
+    <AssemblyName>如e小助手</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <WcfConfigValidationEnabled>True</WcfConfigValidationEnabled>
+    <TargetFrameworkProfile />
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <PublishUrl>D:\Release2\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.2.0</ApplicationVersion>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\如e小助手_Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>0</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\如e小助手_Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>
+    </StartupObject>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetZone>LocalIntranet</TargetZone>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateManifests>false</GenerateManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignManifests>false</SignManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestCertificateThumbprint>5DDC1055176422EE63C490D11D3F3CA8F2FFDB47</ManifestCertificateThumbprint>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ManifestKeyFile>RueHelper_TemporaryKey.pfx</ManifestKeyFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>ico32X32.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Aspose.Pdf">
+      <HintPath>dll\Aspose.Pdf.dll</HintPath>
+    </Reference>
+    <Reference Include="AxInterop.ShockwaveFlashObjects, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>dll\AxInterop.ShockwaveFlashObjects.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib, Version=0.86.0.518, Culture=neutral, PublicKeyToken=1b03e6acf1164f73, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>dll\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.Acrobat">
+      <HintPath>dll\Interop.Acrobat.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Interop.ShockwaveFlashObjects, Version=1.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>dll\Interop.ShockwaveFlashObjects.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net">
+      <HintPath>dll\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Office.Interop.PowerPoint, Version=12.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>dll\Microsoft.Office.Interop.PowerPoint.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Office.Interop.Word, Version=12.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>dll\Microsoft.Office.Interop.Word.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>dll\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="OFFICE, Version=12.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
+      <SpecificVersion>False</SpecificVersion>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+      <HintPath>dll\OFFICE.DLL</HintPath>
+    </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="RobotpenGateway">
+      <HintPath>dll\RobotpenGateway.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data.SQLite, Version=1.0.101.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>dll\x32\System.Data.SQLite.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceModel.Web" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Animate.cs" />
+    <Compile Include="AnswerCount.cs" />
+    <Compile Include="FormScore.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormScore.Designer.cs">
+      <DependentUpon>FormScore.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormCompete.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormCompete.Designer.cs">
+      <DependentUpon>FormCompete.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormInter.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormInter.Designer.cs">
+      <DependentUpon>FormInter.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormQiangDa.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormQiangDa.Designer.cs">
+      <DependentUpon>FormQiangDa.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormDraw.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormDraw.Designer.cs">
+      <DependentUpon>FormDraw.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormTwoMinute.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormTwoMinute.Designer.cs">
+      <DependentUpon>FormTwoMinute.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormVote.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormVote.Designer.cs">
+      <DependentUpon>FormVote.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormTimer.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormTimer.Designer.cs">
+      <DependentUpon>FormTimer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormSummary.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormSummary.Designer.cs">
+      <DependentUpon>FormSummary.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormAward.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormAward.Designer.cs">
+      <DependentUpon>FormAward.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormPicture4.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormPicture4.Designer.cs">
+      <DependentUpon>FormPicture4.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormCaptureScreen.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormCaptureScreen.Designer.cs">
+      <DependentUpon>FormCaptureScreen.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormCamera.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormCamera.Designer.cs">
+      <DependentUpon>FormCamera.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormConfig.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormConfig.Designer.cs">
+      <DependentUpon>FormConfig.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormConfigSchool.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormConfigSchool.Designer.cs">
+      <DependentUpon>FormConfigSchool.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormGroupCallname.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormGroupCallname.Designer.cs">
+      <DependentUpon>FormGroupCallname.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormGroup.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormGroup.Designer.cs">
+      <DependentUpon>FormGroup.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormNotify.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormNotify.Designer.cs">
+      <DependentUpon>FormNotify.cs</DependentUpon>
+    </Compile>
+    <Compile Include="model\ClassInfo.cs" />
+    <Compile Include="Common.cs" />
+    <Compile Include="CustomDragDropHelper.cs" />
+    <Compile Include="Disk.cs" />
+    <Compile Include="EService.cs" />
+    <Compile Include="FileOper.cs" />
+    <Compile Include="Form1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form1.Designer.cs">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form10.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form10.Designer.cs">
+      <DependentUpon>Form10.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form11.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form11.Designer.cs">
+      <DependentUpon>Form11.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form12.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form12.Designer.cs">
+      <DependentUpon>Form12.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormHandon.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormHandon.Designer.cs">
+      <DependentUpon>FormHandon.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormStatistics.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormStatistics.Designer.cs">
+      <DependentUpon>FormStatistics.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormPPTPractise.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormPPTPractise.Designer.cs">
+      <DependentUpon>FormPPTPractise.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FormPPTXiTi.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FormPPTXiTi.Designer.cs">
+      <DependentUpon>FormPPTXiTi.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form2.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form2.Designer.cs">
+      <DependentUpon>Form2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form3.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form3.Designer.cs">
+      <DependentUpon>Form3.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form4.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form4.Designer.cs">
+      <DependentUpon>Form4.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form5.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form5.Designer.cs">
+      <DependentUpon>Form5.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form6.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form6.Designer.cs">
+      <DependentUpon>Form6.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form7.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form7.Designer.cs">
+      <DependentUpon>Form7.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Global.cs" />
+    <Compile Include="Httpd.cs" />
+    <Compile Include="HTTPReq.cs" />
+    <Compile Include="IEService.cs" />
+    <Compile Include="model\IntelligentRecommend.cs" />
+    <Compile Include="model\OfflineProcessor.cs" />
+    <Compile Include="MovingDisk.cs" />
+    <Compile Include="MyTouch.cs" />
+    <Compile Include="MyPDF.cs" />
+    <Compile Include="MyDoc.cs" />
+    <Compile Include="MyPPT.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="RobotPen\myControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="RobotPen\myControl.Designer.cs" />
+    <Compile Include="RobotPen\TrailsShowFrom.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RobotPen\TrailsShowFrom.Designer.cs" />
+    <Compile Include="ScreenCapture.cs" />
+    <Compile Include="UserControl_Config1.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UserControl_Config1.Designer.cs">
+      <DependentUpon>UserControl_Config1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UserControl_Config2.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UserControl_Config2.Designer.cs">
+      <DependentUpon>UserControl_Config2.cs</DependentUpon>
+    </Compile>
+    <Compile Include="util\CRC.cs" />
+    <Compile Include="util\CusStreamReader.cs" />
+    <Compile Include="util\Ini.cs" />
+    <Compile Include="util\JsonOper.cs" />
+    <Compile Include="util\Mouse.cs" />
+    <Compile Include="util\RueSqlite.cs" />
+    <Compile Include="util\RuyiMediaPlayer.cs" />
+    <Compile Include="util\SQLiteHelper.cs" />
+    <Compile Include="util\SQLiteSamples.cs" />
+    <Compile Include="util\TcpClientWithTimeout.cs" />
+    <Compile Include="util\Timeout.cs" />
+    <Compile Include="util\Util.cs" />
+    <Compile Include="Win32.cs" />
+    <Compile Include="YingShi\camera.cs" />
+    <Compile Include="YingShi\HkAction.cs" />
+    <Compile Include="YingShi\HkSDK.cs" />
+    <EmbeddedResource Include="Form1.resx">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormScore.resx">
+      <DependentUpon>FormScore.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormCompete.resx">
+      <DependentUpon>FormCompete.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormInter.resx">
+      <DependentUpon>FormInter.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormQiangDa.resx">
+      <DependentUpon>FormQiangDa.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormDraw.resx">
+      <DependentUpon>FormDraw.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormTwoMinute.resx">
+      <DependentUpon>FormTwoMinute.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormVote.resx">
+      <DependentUpon>FormVote.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormTimer.resx">
+      <DependentUpon>FormTimer.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormSummary.resx">
+      <DependentUpon>FormSummary.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormAward.resx">
+      <DependentUpon>FormAward.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form10.resx">
+      <DependentUpon>Form10.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form11.resx">
+      <DependentUpon>Form11.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form12.resx">
+      <DependentUpon>Form12.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormPicture4.resx">
+      <DependentUpon>FormPicture4.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormCaptureScreen.resx">
+      <DependentUpon>FormCaptureScreen.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormCamera.resx">
+      <DependentUpon>FormCamera.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormConfig.resx">
+      <DependentUpon>FormConfig.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormConfigSchool.resx">
+      <DependentUpon>FormConfigSchool.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormGroupCallname.resx">
+      <DependentUpon>FormGroupCallname.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormGroup.resx">
+      <DependentUpon>FormGroup.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormHandon.resx">
+      <DependentUpon>FormHandon.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormNotify.resx">
+      <DependentUpon>FormNotify.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormStatistics.resx">
+      <DependentUpon>FormStatistics.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormPPTPractise.resx">
+      <DependentUpon>FormPPTPractise.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FormPPTXiTi.resx">
+      <DependentUpon>FormPPTXiTi.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form2.resx">
+      <DependentUpon>Form2.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form3.resx">
+      <DependentUpon>Form3.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form4.resx">
+      <DependentUpon>Form4.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form5.resx">
+      <DependentUpon>Form5.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form6.resx">
+      <DependentUpon>Form6.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form7.resx">
+      <DependentUpon>Form7.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RobotPen\myControl.resx" />
+    <EmbeddedResource Include="RobotPen\TrailsShowFrom.resx" />
+    <EmbeddedResource Include="UserControl_Config1.resx">
+      <DependentUpon>UserControl_Config1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UserControl_Config2.resx">
+      <DependentUpon>UserControl_Config2.cs</DependentUpon>
+    </EmbeddedResource>
+    <None Include="App.ini">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="log4net.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="Properties\app.manifest">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <None Include="update.ini">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\logo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\gif_48_054.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\close.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\min_btn.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\close_btn.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\gif_48_058.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\bg.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.0">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4 %28x86 和 x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.4.5">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 4.5</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="AxWMPLib">
+      <Guid>{6BF52A50-394A-11D3-B153-00C04F79FAA6}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>aximp</WrapperTool>
+      <Isolated>False</Isolated>
+    </COMReference>
+    <COMReference Include="MSComDlg">
+      <Guid>{F9043C88-F6F2-101A-A3C9-08002B2F49FB}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>2</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+    <COMReference Include="NetFwTypeLib">
+      <Guid>{58FBCF7C-E7A9-467C-80B3-FC65E8FCCA08}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+    <COMReference Include="stdole">
+      <Guid>{00020430-0000-0000-C000-000000000046}</Guid>
+      <VersionMajor>2</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>primary</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+    <COMReference Include="WIA">
+      <Guid>{94A0E92D-43C0-494E-AC29-FD45948A5221}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+    <COMReference Include="WMPLib">
+      <Guid>{6BF52A50-394A-11D3-B153-00C04F79FAA6}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\click.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\noclick.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\undefined.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\click.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\select.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\answer.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\unanswer.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\call.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\call.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\nameshow.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\jiangli.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\jiangliname.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\mxcp.gif" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\goog.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\jp1.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\jp2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\jp3.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\folder.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\wenjianjia.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\audio.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\excel.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\img.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\null.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pdf.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ppt.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\video.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\word.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\close.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\min.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\pad.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\view.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\jt.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\add.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\cx.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\back.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\downico.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\logoicon.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\www.ico32X32.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="flash.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="music.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <None Include="Resources\myBg.png" />
+    <None Include="Resources\competeHat.png" />
+    <None Include="Resources\bgCompete.png" />
+    <None Include="Resources\group_score.png" />
+    <None Include="Resources\teacher_img.png" />
+    <None Include="Resources\self_img.png" />
+    <None Include="Resources\self_eval.png" />
+    <None Include="Resources\teacher_eval.png" />
+    <None Include="Resources\penBoard.png" />
+    <None Include="Resources\penBg.jpg" />
+    <None Include="Resources\qd_title.png" />
+    <None Include="Resources\qd_start.png" />
+    <None Include="Resources\qd_headimg.png" />
+    <None Include="Resources\qd_goon.png" />
+    <None Include="Resources\qd_good.png" />
+    <None Include="Resources\voteTitle.png" />
+    <None Include="Resources\voteD_top.png" />
+    <None Include="Resources\voteD_line.png" />
+    <None Include="Resources\voteD_count.png" />
+    <None Include="Resources\voteD_bg.png" />
+    <None Include="Resources\voteC_top.png" />
+    <None Include="Resources\voteC_line.png" />
+    <None Include="Resources\voteC_count.png" />
+    <None Include="Resources\voteC_bg.png" />
+    <None Include="Resources\voteB_top.png" />
+    <None Include="Resources\voteB_line.png" />
+    <None Include="Resources\voteB_count.png" />
+    <None Include="Resources\voteB_bg.png" />
+    <None Include="Resources\voteA_top.png" />
+    <None Include="Resources\voteA_line.png" />
+    <None Include="Resources\voteA_count.png" />
+    <None Include="Resources\voteA_bg.png" />
+    <None Include="Resources\star.png" />
+    <None Include="Resources\notebox.png" />
+    <None Include="Resources\nameshow2.png" />
+    <None Include="Resources\rewardname.png" />
+    <None Include="Resources\reward_stars.png" />
+    <None Include="Resources\reward_star.png" />
+    <None Include="Resources\reward_board.png" />
+    <None Include="Resources\callname.png" />
+    <None Include="Resources\star1_5.png" />
+    <None Include="Resources\star1_2.png" />
+    <None Include="Resources\star1_4.png" />
+    <None Include="Resources\star1_3.png" />
+    <None Include="Resources\star1_1.png" />
+    <None Include="Resources\star1_name.png" />
+    <None Include="Resources\bg-top3.png" />
+    <None Include="Resources\reward_7.png" />
+    <None Include="Resources\reward_6.png" />
+    <None Include="Resources\reward_5.png" />
+    <None Include="Resources\reward_4.png" />
+    <None Include="Resources\reward_3.png" />
+    <None Include="Resources\reward_2.png" />
+    <None Include="Resources\reward_1.png" />
+    <None Include="Resources\minB.png" />
+    <None Include="Resources\minA.png" />
+    <None Include="Resources\close3B.png" />
+    <None Include="Resources\close3A.png" />
+    <None Include="Resources\closeB.png" />
+    <None Include="Resources\closeA.png" />
+    <None Include="Resources\close2B.png" />
+    <None Include="Resources\close2A.png" />
+    <None Include="Resources\phone.jpg" />
+    <None Include="Resources\400.png" />
+    <None Include="Resources\about-logo.png" />
+    <None Include="Resources\about_logo.jpg" />
+    <None Include="Resources\notify-bg.jpg" />
+    <None Include="Resources\close_btn1.png" />
+    <None Include="Resources\clap.wav" />
+    <None Include="Resources\notify_background.jpg" />
+    <None Include="Resources\NotifyBackground.bmp" />
+    <None Include="Resources\goog0.png" />
+    <None Include="Resources\filesync_24.png" />
+    <None Include="Resources\add_24.png" />
+    <Content Include="ico32X32.ico" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

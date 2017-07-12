@@ -1,0 +1,5 @@
+D:\如e小助手_Debug\RueMng.exe
+D:\如e小助手_Debug\RueMng.pdb
+D:\App\RuyiHelper_v1.6.2\RuyiMng\obj\Debug\RueMng.exe
+D:\App\RuyiHelper_v1.6.2\RuyiMng\obj\Debug\RueMng.pdb
+D:\APP\RuyiHelper_v1.6.2\RuyiMng\obj\Debug\RueMng.csprojResolveAssemblyReference.cache

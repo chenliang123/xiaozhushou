@@ -1,0 +1,819 @@
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using RueHelper.model;
+using RueHelper.util;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Configuration;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading;
+
+namespace RueHelper
+{
+    /// <summary>
+    /// 各Form的共用上传类
+    /// </summary>
+    class Common
+    {
+        private static log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+
+        private static string schoolid = Global.getSchoolID()+"";
+        private static string classid = Global.getClassID() + "";
+        private static string url_class = Global.url_class;
+        private static string url_assistant = Global.url_assistant;
+        private static string KEY = "ckj75fhd9Jk$";
+
+        #region RuyiHelper--Hardware
+        public static string getHDID()
+        {
+            string url = Global.url_recv + "/EduApi/hd.do?action=serialid.get&tm=" + Util.getUTC();
+            string resp = HTTPReq.HttpGet(url).Replace("\"","");
+            int pos1 = resp.IndexOf("deviceid");
+            if(pos1 > 0)
+            {
+                try
+                {
+                    string tmp1 = resp.Substring(pos1+9);//"deviceid:"
+                    int pos2 = tmp1.IndexOf(",");
+                    string tmp2 = tmp1.Substring(0, pos2);
+                    if (tmp2.Length > 0)
+                        Global.setHDID(tmp2);
+                    return tmp2;
+                }catch(Exception e){}
+            }
+            return "";
+        }
+
+        public static void uploadHDBind()
+        {
+            int classid = Global.getClassID();
+
+            string data = "hdid=" + Global.getHDID();
+            string resp = doPost("updateHDBind", data);
+        }
+        #endregion
+        /// <summary>
+        /// 事件上传----做题结果上传
+        /// </summary>
+        /// <param name="result"></param>
+        public static void uploadXitiResult_Old(string xitiid, string answer, string result, string createtime,int timediff)
+        {
+            string xitiResult_data = "rid=" + xitiid;
+            xitiResult_data += "&answer=" + answer;
+            xitiResult_data += "&result=" + result;
+            xitiResult_data += "&createtime=" + createtime;
+            xitiResult_data += "&duration=" + timediff;
+            doPostAsync("xitiResult.upload", xitiResult_data);
+        }
+
+        public static void uploadXitiResult(XitiResult xitiResult)
+        {
+            if(xitiResult.count>=5)
+            {
+                string data = "body=" + xitiResult.toJson();
+                doPostAsync("XitiResult", data);
+            }
+            else
+            {
+                Log.Info("uploadXitiResult_Cancel. " + xitiResult.toJson());
+            }
+            return;
+        }
+        public static void uploadHandon(string rid,string createtime, string handon, string callname, string reward, string criticize, string handonRepeated, int timediff)
+        {
+            ////异步同步到云服务
+            string callname_data = "rid=" + rid;
+            callname_data += "&createtime=" + createtime;
+            callname_data += "&handon=" + handon;
+            callname_data += "&callname=" + callname;
+            callname_data += "&reward=" + reward;
+            callname_data += "&criticize=" + criticize;
+            callname_data += "&handon0=" + handonRepeated;
+            callname_data += "&duration=" + timediff;
+            doPostAsync("addHandon",callname_data);
+        }
+        public static void uploadHandon_Group(string rid, string createtime, string handon, string callname, string reward, int groupid, int timediff)
+        {
+            ////异步同步到云服务
+            string callname_data = "rid=" + rid;
+            callname_data += "&createtime=" + createtime;
+            callname_data += "&handon=" + handon;
+            callname_data += "&callname=" + callname;
+            callname_data += "&reward=" + reward;
+            callname_data += "&duration=" + timediff;
+            callname_data += "&groupid=" + groupid;
+            doPostAsync("GroupHandon",callname_data);
+        }
+        public static void uploadXiti_Group(string rid, string createtime, string result, string callname, string reward, int groupid, int timediff)
+        {
+            string callname_data = "rid=" + rid;
+            callname_data += "&createtime=" + createtime;
+            callname_data += "&result=" + result;
+            callname_data += "&callname=" + callname;
+            callname_data += "&reward=" + reward;
+            callname_data += "&duration=" + timediff;
+            callname_data += "&groupid=" + groupid;
+            doPostAsync("GroupXiti",callname_data);
+        }
+        public static void uploadInvalidHandon(string result)
+        {
+            if (Global.isUploadInvalidData() && result.Length > 5)
+            {
+                string data = "&result=" + result;
+                doPostAsync("InvalidHandon", data);
+            }
+            return;
+        }
+        public static void uploadInvalidXitiResult(string result)
+        {
+            if(Global.isUploadInvalidData() &&　result.Length > 5)
+            {
+                string data = "tmnow=" + DateTime.Now.ToString("yyyyMMddHHmmss");
+                data += "&result=" + result;
+                doPostAsync("InvalidXitiResult", data);
+            }
+        }
+        public static void setGroup(int groupid,string data)
+        {
+            string req = "groupid=" + groupid + "&data=" + data;
+            doPostAsync("setGroup", req);
+        }
+        public static string createGroup(string g)
+        {
+            string data = "data=" + g;
+            string ret = doPost("createGroup", data);
+            return ret;
+        }
+        public static string getGroup()
+        {
+            string ret = doPost("getGroup","");
+            Global.setGroup(ret);
+            return ret;
+        }
+        public static void uploadCallname(string callname)
+        {
+            ////异步同步到云服务
+            string data = "createtime=" + DateTime.Now.ToString("yyyyMMddHHmmss");
+            data += "&callname=" + callname;
+            Log.Info(data);
+            doPostAsync("addCallname", data);
+            return;
+        }
+        public static int uploadOfflineData(LessonEvents le)
+        {
+            string _lessonid = "0";
+            int _classid = le.classid;
+            int _courseid = le.courseid;
+            int _teacherid = le.teacherid;
+
+            int nRet = 0;
+            foreach(LessonEvent ev in le.eventlist)
+            {
+                string tm = ev.tm;
+                string url = ev.request;
+                if(tm==null)
+                {
+                    tm = url.Substring(url.IndexOf("&t=")+3,14);
+                }
+                string data = ev.filepath +"&offline=1";
+
+                string src = tm + "_" + Global.getSchoolID() + "_" + _classid + "_" + KEY;
+                string sign = GetMD5(src);
+                string keyTemp = sign.Substring(4, 16);
+                if(_lessonid!="0")
+                {
+                    data = data.Replace("lessonid=0", "lessonid=" + _lessonid);
+                }
+
+                if(_lessonid == "0" && ev.type != LessonEventType.ClassOn)
+                {
+                    continue;
+                }
+
+                if(ev.type == LessonEventType.UploadFile && _lessonid!="0")
+                {
+                    string ret = HTTPReq.UploadFile(url, ev.filepath);
+                }
+                else
+                {
+                    string dataEncrypt = AesEncrypt(data, keyTemp);//跟java的substring不一样
+                    Log.Info("OfflineUpload. url=" + url + ", " + data);
+                    string retCrypt = HTTPReq.HttpPost(url, dataEncrypt);
+                    string ret = AesDecrypt(retCrypt, keyTemp);
+                    if (ev.type == LessonEventType.ClassOn && ret.Length > 0)
+                    {
+                        JObject jo = (JObject)JsonConvert.DeserializeObject(ret);
+                        _lessonid = jo["data"]["lessonid"].ToString();
+                        string _index = jo["data"]["index"].ToString();
+                        string _coursename = jo["data"]["coursename"].ToString();
+                        nRet++;
+                    }
+                    else
+                    {
+                        if (ret.Length > 0)
+                        {
+                            nRet++;
+                        }
+
+                        if (ev.type == LessonEventType.ClassOff)
+                        {
+                        }
+                        else
+                        {
+                        }
+                    }
+                }
+                
+                
+            }
+            return nRet;
+        }
+        public static void uploadReward(string reward,int flag=1)
+        {
+            ////异步同步到云服务
+            string data = "createtime=" + DateTime.Now.ToString("yyyyMMddHHmmss");
+            data += "&reward=" + reward;
+            data += "&flag=" + flag;
+            Log.Info(data);
+            doPostAsync("addReward", data);
+            return;
+        }
+
+        /// <summary>
+        /// 事件上传----老师打开PPT
+        /// </summary>
+        /// <param name="filename"></param>
+        public static void uploadFileopenEvent(string filename)
+        {
+            ////异步同步到云服务
+            string filepath = EService.getFilepath(filename);
+            string fileopen_data = "";
+            string md5 = Util.GetFileMD5(filepath);
+
+            fileopen_data += "filename=" + filename;
+            fileopen_data += "&filepath=" + filepath;
+            fileopen_data += "&md5=" + md5;
+            doPostAsync("fileopen", fileopen_data);
+            return;
+        }
+
+        /// <summary>
+        /// 事件上传----老师打开PPT
+        /// </summary>
+        /// <param name="filename"></param>
+        public static void uploadFileEvent(string body)
+        {
+            string data = "body="+body;
+            doPostAsync("FileEvent", data);
+            return;
+        }
+                /// <summary>
+        /// 事件上传----老师打开PPT
+        /// </summary>
+        /// <param name="filename"></param>
+        public static void uploadRecordEvent(string filename,string md5)
+        {
+            string data = "filename=" + filename + "&md5=" + md5;
+            doPostAsync("addRecordEvent", data);
+            return;
+        }
+        public static void delRecordEvent(string filename)
+        {
+            string data = "filename=" + filename;
+            doPostAsync("delRecordEvent", data);
+            return;
+        }
+
+        /// <summary>
+        /// 事件上传----老师打开PPT
+        /// </summary>
+        /// <param name="filename"></param>
+        public static void uploadFilecloseEvent(string filename)
+        {
+            ////异步同步到云服务
+            string filepath = EService.getFilepath(filename);
+            string hdtype = filepath.Split('#')[0].ToLower();
+            string path = filepath.Split('#')[1];
+
+            string data = "filename=" + filename;
+            data += "&drivertype=" + hdtype;
+            data += "&filepath=" + System.Web.HttpUtility.UrlEncode(path, Encoding.UTF8);
+            doPostAsync("fileclose", data);
+            return;
+        }
+
+        /// <summary>
+        /// 事件上传----拍照
+        /// </summary>
+        /// <param name="filename"></param>
+        public static void uploadCameraEvent(string filename)
+        {
+            string data = "filename="+filename;
+            doPostAsync("CameraEvent", data);
+            return;
+        }
+
+        /// <summary>
+        /// 事件上传----拍照
+        /// </summary>
+        /// <param name="filename"></param>
+        public static void uploadPhotoCompare(string filename)
+        {
+            string data = "filename=" + filename;
+            doPostAsync("PhotoCompare", data);
+            return;
+        }
+
+        /// <summary>
+        /// 图片画笔
+        /// </summary>
+        /// <param name="filename"></param>
+        public static void uploadDrawView(string filename)
+        {
+            ////异步同步到云服务
+            string data = "filename=" + filename;
+            doPostAsync("DrawView", data);
+        }
+        
+
+        /// <summary>
+        /// 文件上传----老师PPT做题或抢答
+        /// </summary>
+        /// <param name="filename"></param>
+        public static void uploadPicture(string path)
+        {
+            //if (true)
+            //    return;
+            FileInfo fileInfo = new FileInfo(path);
+            long filesize = fileInfo.Length;
+            if(filesize > 1024*1024*5)
+            {
+                Log.Error("file too big. " + path);
+                return;
+            }
+
+            int pos = path.LastIndexOf("\\");
+            string fileName = path.Substring(pos + 1);
+            string md5 = Util.GetFileMD5(path);
+
+            //异步同步到云服务
+            string url_param = "action=fileupload";
+            url_param += "&schoolid=" + schoolid;
+            url_param += "&classid=" + Global.getClassID();
+            url_param += "&courseid=" + Global.getCourseID();
+            url_param += "&lessonid=" + Global.getLessonID();
+            url_param += "&teacherid=" + Global.getTeacherID();
+            url_param += "&filesize=" + filesize;
+            url_param += "&md5=" + md5;
+            url_param += "&filename=" + fileName;
+
+            Thread thread = new Thread(delegate()
+            {
+                string url = "http://" + Global.HOST + "/upload.do" + "?" + url_param;
+                string ret = HTTPReq.UploadFile(url, path);
+                Log.Info(url + "," + path);
+            });
+            thread.Start();
+            return;
+        }
+        public static string getLastTime()
+        {
+            return doPost("getLastTime", "");
+        }
+
+        /// <summary>
+        /// 获取Lesson
+        /// </summary>
+        public static void getLesson()
+        {
+            doPost("lesson.get","");
+        }
+        public static void getLessonAsync()
+        {
+            doPostAsync("lesson.get","");
+        }
+        public static void getLessonWithTimeout()
+        {
+            RueHelper.util.Timeout timeout = new RueHelper.util.Timeout();
+            timeout.DoPost = doPost;
+            bool bret = timeout.DoPostTimeout("lesson.get", "", new TimeSpan(0, 0, 0, 3));
+        }
+
+        /// <summary>
+        /// 获取Lesson
+        /// </summary>
+        public static string getBookOutline(string action)
+        {
+            string jsonText = doPost(action, "");
+            return jsonText;
+        }
+        /// <summary>
+        /// 获取Lesson
+        /// </summary>
+        public static string getXiti(string action,string bookid,string muluid)
+        {
+            string data = "bookid=" + bookid + "&muluid=" + muluid;
+            string jsonText = doPost(action, data);
+            return jsonText;
+        }
+
+        /// <summary>
+        /// 获取Lesson
+        /// </summary>
+        public static void setLessonOff(int manual,string accessValue,string chapter)
+        {
+            if(Global.getLessonID()==0 && Global.getTeacherID()==0)
+            {
+                Log.Info("setLessonOff nosync");//
+            }
+            else
+            {
+                string jsonText = doPost("lesson.off","manual=" + manual+"&accessValue="+accessValue+"&chapter="+chapter);
+                Log.Info(jsonText);
+            }
+
+            //清空数据
+            Global.setCourseID(0);
+            Global.setLessonID(0);
+            Global.setLessonOff();
+        }
+
+        /// <summary>
+        /// 设置座位
+        /// </summary>
+        public static void setSeat(string seat)
+        {
+            string data = "seat=" + seat;
+            doPostAsync("setSeat", data);
+        }
+        
+        /// <summary>
+        /// getClassInfo
+        /// </summary>
+        public static string getClassInfo()
+        {
+            string jsonText = doPost("classinfo.get","");
+            return jsonText;
+        }
+        /// <summary>
+        /// getClassInfo
+        /// </summary>
+        public static string getSchoolInfo(int schoolid,string authcode)
+        {
+            string ret = doPost("schoolinfo.get", "schoolid="+schoolid+"&authcode=" + authcode);
+            if (ret.Length > 0)
+            {
+                JObject jo = (JObject)JsonConvert.DeserializeObject(ret);
+                string _data = jo["data"].ToString();
+                string _ret = jo["ret"].ToString();
+                string _msg = jo["msg"].ToString();
+                return _data;
+            }
+            else
+            {
+                return "";
+            }
+        }
+        public static string ClearXiti()
+        {
+            return GetXitiResult(true);//clear
+        }
+        /// <summary>
+        /// 采集器----GetXiti
+        /// </summary>
+        public static string GetXitiResult(bool bClear = false)
+        {
+            Log.Debug("GetXitiResult()_1 ");
+            string ret = "";
+            if(Global.isHDPassive())
+            {
+                Log.Info("GetXitiResult()_2 ");
+                string url = Global.url_recv;
+                string url_param = "action=xiti.get";
+                url_param += "&classid=0";
+                url_param += "&courseid=0";
+                url_param += "&lessonid=0";
+                if (bClear)
+                {
+                    Thread thread = new Thread(delegate()
+                    {
+                        ret = HTTPReq.HttpGet(url + url_param);
+                        Log.Info("HD_Async_Xiti: " + url + url_param + ", ret=" + ret);
+                    });
+                    thread.Start();
+                }
+                else
+                {
+                    string json = HTTPReq.HttpGet(url + url_param);
+                    Log.Info("HD_Xiti_Passive: " + url + url_param + ", json=" + json);
+
+                    CBInfo cb = JsonOper.DeserializeJsonToObject<CBInfo>(json.Replace("(", "").Replace(")", ""));
+                    if (cb != null && cb.data.Length > 0)
+                    {
+                        string data = cb.data;
+
+                        for (int i = 0; i < data.Split('|').Length - 1; i++)
+                        {
+                            int num = Convert.ToInt16(data.Split('|')[i].Split(':')[0].ToString().Replace("-", ""));
+                            string answer = data.Split('|')[i].Split(':')[1];
+                            //57A299E5,A;57A299E5,B;57A299E6,C;57A299E6,D;57A299E6,S
+                            string[] szKey = answer.Split(';');
+                            SortedSet<string> keySet = new SortedSet<string>();
+                            for (int k = 0; k < szKey.Length; k++)
+                            {
+                                string _answer = szKey[k].Split(',')[1];
+                                if (_answer == "S")
+                                    continue;
+                                if (!keySet.Contains(_answer))
+                                {
+                                    keySet.Add(_answer);
+                                }
+                            }
+                            string keys = "";
+                            foreach (string key in keySet)
+                            {
+                                keys += key;
+                            }
+                            if (keys.Length == 0)
+                                continue;
+                            string context = num + ":" + keys;
+                            ret += (ret.Length > 0 ? "|" : "") + context;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                if (bClear)
+                {
+                    Log.Debug("GetXitiResult()_2, Clear...");
+                    string data = Httpd.ClearMQ_Xiti();
+                    if(data.Length > 0)
+                        Common.uploadInvalidXitiResult(data);
+                }
+                else
+                {
+                    Log.Debug("GetXitiResult()_3_1, Pop...");
+                    ret = Httpd.PopMQ_Xiti();
+                    Log.Debug("GetXitiResult()_3_2, Pop..." + ret);
+                }
+            }
+            return ret;
+        }
+
+
+        public static string GetHandon()
+        {
+            string result = "";
+            if (Global.isHDPassive())
+            {
+                string url = Global.url_recv;
+                string url_param = "action=handon";
+                url_param += "&classid=0";
+                url_param += "&courseid=0";
+                url_param += "&lessonid=0";
+
+                string ret = HTTPReq.HttpGet(url + url_param);
+                Log.Debug("HD_Handon: " + url + url_param + ", ret=" + ret);
+
+                CBInfo cb = JsonOper.DeserializeJsonToObject<CBInfo>(ret.Replace("(", "").Replace(")", ""));
+                if (cb != null && cb.data.Length > 0)
+                {
+                    result = cb.data.Replace("-", "");
+                    if (result.EndsWith("|"))
+                        result = result.Substring(0, result.Length - 1);
+                }
+            }
+            else
+            {
+                result = Httpd.PopMQ_Handon();
+            }
+            return result;
+        }
+
+        public static string ClearHandon(bool bUpload=true)
+        {
+            string ret = "";
+            if (Global.isHDPassive())
+            {
+                string url = Global.url_recv;
+                string url_param = "action=handon";
+                url_param += "&classid=0";
+                url_param += "&courseid=0";
+                url_param += "&lessonid=0";
+
+                if (bUpload)
+                {
+                    Thread thread = new Thread(delegate()
+                    {
+                        ret = HTTPReq.HttpGet(url + url_param);
+                        Log.Info("HD_Async_Handon: " + url + url_param + ", ret=" + ret);
+                    });
+                    thread.Start();
+                }
+            }
+            else
+            {
+                string data = Httpd.ClearMQ_Handon();
+                if (bUpload)
+                    Common.uploadInvalidHandon(data);
+            }
+            return ret;
+        }
+
+
+        /// <summary>
+        /// 采集器----清空之前的按键信息
+        /// </summary>
+        public static int HD_Test()
+        {
+            //if (Global.isHDPassive())
+            {
+                string url = Global.url_recv;
+                string url_param = "action=classroom.get";
+                url_param += "&callback=CB";
+                //&callback=CB&tm=5755587A
+
+                string ret1 = HTTPReq.HttpGet(url + url_param, 3000);
+                string ret2 = HTTPReq.HttpGet(url + url_param, 3000);
+                int nRet1 = 0;
+                int nRet2 = 0;
+                if (ret1.Length > 0 && ret1.IndexOf("classroom.get") > 0)
+                    nRet1 = 1;
+                if (ret2.Length > 0 && ret2.IndexOf("classroom.get") > 0)
+                    nRet2 = 1;
+                if (nRet1 == 1 || nRet2 == 1)
+                    return 1;
+                else
+                    return 0;
+            }
+
+        }
+        private static void handleGetLessonResponse(string jsonstr)
+        {
+            if (jsonstr!=null && jsonstr.Length > 10)
+            {
+                try
+                {
+                    JObject jo = (JObject)JsonConvert.DeserializeObject(jsonstr);
+                    string _lessonid = jo["data"]["lessonid"].ToString();
+                    string _courseid = jo["data"]["courseid"].ToString();
+                    string _index = jo["data"]["index"].ToString();
+                    string _coursename = jo["data"]["coursename"].ToString();
+                    string _teacherid = jo["data"]["teacherid"].ToString();
+
+                    Global.setLessonID(Util.toInt(_lessonid));
+                    Global.setLessonIndex(Util.toInt(_index));
+                    Global.setCourseName(_coursename);
+                    Global.setCourseID(Util.toInt(_courseid));
+                    Global.setTeacherID(Util.toInt(_teacherid));
+                }
+                catch (Exception e)
+                {
+                    Log.Error("handleGetLessonResponse exception. " + e.Message);
+                }
+                
+            }
+            else
+            {
+                Log.Error("getLesson error.");
+            }
+        }
+
+        public static void doPostAsync(string action, string data)
+        {
+            Thread th = new Thread(delegate() {
+                string ret = doPost(action, data);
+            });
+            th.Start();
+        }
+        public static string doPost(string action, string data)
+        {
+            string data0 = "action="+action+"&classid=" + Global.getClassID() + "&courseid=" + Global.getCourseID() + "&teacherid=" + Global.getTeacherID();
+            if(data.IndexOf("lesson.get") < 0)
+                data0 += "&lessonid=" + Global.getLessonID();
+            if (data.IndexOf("schoolid=") < 0)
+                data0 += "&schoolid=" + Global.getSchoolID();
+            data = data0 + "&" + data;
+
+            string tm = DateTime.Now.ToString("yyyyMMddHHmmss");
+            string src = tm +"_" + Global.getSchoolID()+"_"+Global.getClassID() +"_"+KEY;
+            string sign = GetMD5(src);
+            string url = Global.url_assistant + "s=" + Global.getSchoolID() + "&r=0&classid=" + Global.getClassID() + "&t=" + tm + "&c=" + sign;
+            string ret = "";
+            string keyTemp = sign.Substring(4, 16);
+            string dataEncrypt = AesEncrypt(data, keyTemp);//跟java的substring不一样
+
+            string retCrypt = HTTPReq.HttpPost(url, dataEncrypt);
+            ret = AesDecrypt(retCrypt, keyTemp);
+            if(ret.Length == 0)
+            {
+                OfflineProcessor.AddEvent(action, url, data, tm);
+            }
+            Log.Info("doPost: data="+data);
+            Log.Debug("ret=" + ret);
+
+            if (data.IndexOf("lesson.get") > 0)
+            {
+                handleGetLessonResponse(ret);
+            }
+            else if (data.IndexOf("handon") > 0 && Global.getLessonID() == 0)
+            {
+                handleGetLessonResponse(ret);
+            }
+
+            if (ret == null)
+                ret = "";
+            return ret;
+        }
+
+        ////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>
+        /// MD5
+        /// </summary>
+        /// <param name="strText"></param>
+        /// <returns></returns>
+        public static string MD5(string strText)
+        {
+            MD5 md5 = new MD5CryptoServiceProvider();
+            byte[] result = md5.ComputeHash(System.Text.Encoding.Default.GetBytes(strText));
+            return System.Text.Encoding.Default.GetString(result);
+        }
+        public static string GetMD5(string sDataIn)
+        {
+            System.Security.Cryptography.MD5CryptoServiceProvider md5 = new System.Security.Cryptography.MD5CryptoServiceProvider();
+            byte[] bytValue, bytHash;
+            bytValue = System.Text.Encoding.UTF8.GetBytes(sDataIn);
+            bytHash = md5.ComputeHash(bytValue);
+            md5.Clear();
+            string sTemp = "";
+            for (int i = 0; i < bytHash.Length; i++)
+            {
+                sTemp += bytHash[i].ToString("X").PadLeft(2, '0');
+            }
+            return sTemp.ToLower();
+        }  
+        /// <summary>
+        /// AES加密程序，与JAVA通用
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static string AesEncrypt(string str, string key)
+        {
+            if (string.IsNullOrEmpty(str)) return null;
+            Byte[] toEncryptArray = Encoding.UTF8.GetBytes(str);
+
+            System.Security.Cryptography.RijndaelManaged rm = new System.Security.Cryptography.RijndaelManaged
+            {
+                Key = Encoding.UTF8.GetBytes(key),
+                Mode = System.Security.Cryptography.CipherMode.ECB,
+                Padding = System.Security.Cryptography.PaddingMode.PKCS7
+            };
+
+            System.Security.Cryptography.ICryptoTransform cTransform = rm.CreateEncryptor();
+            Byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+
+            return Convert.ToBase64String(resultArray, 0, resultArray.Length);
+        }
+
+        /// <summary>
+        /// AES解密，与JAVA通用
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public static string AesDecrypt(string str, string key)
+        {
+            if (string.IsNullOrEmpty(str))
+                return "";
+            try
+            {
+                Byte[] toEncryptArray = Convert.FromBase64String(str);
+
+                System.Security.Cryptography.RijndaelManaged rm = new System.Security.Cryptography.RijndaelManaged
+                {
+                    Key = Encoding.UTF8.GetBytes(key),
+                    Mode = System.Security.Cryptography.CipherMode.ECB,
+                    Padding = System.Security.Cryptography.PaddingMode.PKCS7
+                };
+
+                System.Security.Cryptography.ICryptoTransform cTransform = rm.CreateDecryptor();
+                Byte[] resultArray = cTransform.TransformFinalBlock(toEncryptArray, 0, toEncryptArray.Length);
+
+                return Encoding.UTF8.GetString(resultArray);
+            }
+            catch (Exception e)
+            {
+                Log.Error(e.Message);
+                return "";
+            }
+
+        }
+    }
+}

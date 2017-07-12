@@ -1,0 +1,193 @@
+﻿using Newtonsoft.Json;
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Configuration;
+using System.Data;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Media;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Runtime.InteropServices;
+using RueHelper.util;
+
+namespace RueHelper
+{
+    public partial class FormCompete : Form
+    {
+        [DllImport("user32.dll", EntryPoint = "AnimateWindow")]
+        private static extern bool AnimateWindow(IntPtr handle, int ms, int flags);
+        public const int AW_HOR_POSITIVE = 0X1;//左->右
+        public const int AW_HOR_NEGATIVE = 0X2;//右->左
+        public const int AW_VER_POSITIVE = 0X4;//上->下
+        public const int AW_VER_NEGATIVE = 0X8;//下->上
+        public const int AW_CENTER = 0X10;
+        public const int AW_HIDE = 0X10000;
+        public const int AW_ACTIVATE = 0X20000;//逐渐显示
+        public const int AW_SLIDE = 0X40000;
+        public const int AW_BLEND = 0X80000;
+        public const int AW_L2R = 0X80001;
+        public const int AW_R2L = 0X80002;
+        public const int AW_U2D = 0X80004;
+        public const int AW_D2U = 0X80008;
+
+        private static log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+
+        AutoResetEvent are = new AutoResetEvent(false);
+        int screenWidth = Screen.PrimaryScreen.Bounds.Width;
+        int screenHeight = Screen.PrimaryScreen.Bounds.Height;
+
+        public FormCompete(int num, string allScore)
+        {
+            InitializeComponent();
+            ///SetPanel(num);
+
+            this.Height = screenHeight;
+            this.Width = screenWidth;
+            StartPosition = FormStartPosition.Manual;
+            SetDesktopLocation(0,0);
+            
+            this.TopMost = true;
+            this.Show();
+            this.BringToFront();
+
+            //根据传过来的组数，动态创建控件
+            AddGroupBox(num,allScore);
+        }
+
+        public void SetPanel(string numberstr)
+        {
+          
+        }
+        public void AddGroupBox(int num ,string str)
+        {
+            int iW = screenWidth / num;
+            if(num > 5){
+                iW = screenWidth / 5;
+            }
+            int iL = (iW - 158)/2;
+            int iT0 = (screenHeight - 208)/2;
+            int iT1 = (screenHeight/2 - 208) / 2;
+            int iT2 = screenHeight / 2 + iT1;
+            string name = "gbox";
+            int index = 0;
+            for (int i = 0; i < num; i++)
+            {
+                PictureBox gbox = new PictureBox();
+                
+                if (num <= 5)
+                {
+                    gbox.Location = new Point(iL, iT0);
+                }
+                else 
+                {
+                    if (i < 5)
+                    {
+                        gbox.Location = new Point(iL, iT1);
+                    }
+                    else
+                    {
+                        gbox.Location = new Point(iL, iT2);
+                    }
+                }
+                gbox.Name = "第" + (i + 1) + "组";
+                gbox.Width = 158;
+                gbox.Height = 208;
+                gbox.BackgroundImage = global::RueHelper.Properties.Resources.bgCompete;
+                gbox.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+                gbox.BackColor = Color.Transparent;
+                if (i < 5)
+                {
+                    gbox.Left = iL + i * iW;
+                }
+                else 
+                {
+                    gbox.Left = iL + (i-5) * iW;
+                }
+                
+                //gbox.Location = new Point(32, 20 + i * 150);
+                this.Controls.Add(gbox);
+                //每个控件再调用添加两个文本控件
+                string[] strArray = str.Split(',');
+
+                int max = int.Parse(strArray[0]);
+                 
+                 for(int j = 0;j < strArray.Length;j++){
+                     if (int.Parse(strArray[j]) > max)
+                     {
+                        index=j;
+                        max = int.Parse(strArray[j]);
+                     }    
+                 }   //找最大
+
+                 for (int k = 1; k < strArray.Length; k++)
+                 {
+                     if (int.Parse(strArray[k]) == max && k != index)
+                     {
+                         index = -1;
+                     }
+                 }  //去重
+
+                 if (i == index)
+                 {
+                     AddTxt(gbox, strArray[i], false);
+                 }
+                 else 
+                 {
+                     AddTxt(gbox, strArray[i], true);
+                 }        
+            }
+        }
+        public void AddTxt(PictureBox gb,string strnum,bool bHide)
+        {
+            string name = "txt";
+            PictureBox picHat = new PictureBox();
+            picHat.Width = 98;
+            picHat.Height = 92;          
+            picHat.BackgroundImage = global::RueHelper.Properties.Resources.competeHat;
+            picHat.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Stretch;
+            //picHat.Image = Image.FromFile("bgCompete.png");
+            picHat.BackColor = Color.Transparent;           
+            if(bHide){
+               picHat.Hide();
+            };
+            //picHat.Hide();
+            //picHat.ForeColor = Color.FromArgb(1,0,0,0);
+            //picHat.Visible = true;
+            picHat.Location = new Point(gb.Location.X - 40,gb.Location.Y - 50);           
+            this.Controls.Add(picHat);
+            //picHat.BringToFront();
+
+            for (int i = 0; i < 2; i++)
+            {
+                Label txt = new Label();
+                txt.Width = 158;
+                txt.Height = 50;
+                txt.TextAlign = System.Drawing.ContentAlignment.TopCenter;
+                txt.BackColor = Color.Transparent;
+                txt.Font = new System.Drawing.Font("微软雅黑", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+                //txt.Name = gb.Name + name + i;
+                if (i == 0)
+                {
+                    txt.Text = gb.Name;
+                    txt.Location = new Point(0, 15);
+                    txt.ForeColor = System.Drawing.Color.White;
+                }
+                else 
+                {
+                    txt.Text = strnum;
+                    txt.Location = new Point(0, 110);
+                }                            
+                gb.Controls.Add(txt);
+            }          
+        }
+    }
+}

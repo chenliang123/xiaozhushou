@@ -1,0 +1,243 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.Threading;
+using System.IO;
+using System.Configuration;
+using System.Media;
+using RueHelper.model;
+using Newtonsoft.Json.Linq;
+using RueHelper.util;
+
+namespace RueHelper
+{
+    public partial class FormSummary : Form
+    {
+        private static log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        int screenWidth = Screen.PrimaryScreen.Bounds.Width;
+        int screenHeight = Screen.PrimaryScreen.Bounds.Height;
+        public FormSummary()
+        {
+            InitializeComponent();
+            this.Text = "课堂总结";
+            this.WindowState = FormWindowState.Maximized;
+            this.Show();
+            this.BringToFront();
+            //this.TopMost = true;
+#if DEBUG
+            this.TopMost = false;//Form10 CallName,zzz
+#endif
+
+            int width1 = screenWidth / 5;
+            int height1 = screenHeight*23/100;
+            this.pictureBox1.Location = new System.Drawing.Point(0 * width1 + (width1-150)/2 + 40, height1);
+            this.pictureBox2.Location = new System.Drawing.Point(1 * width1 + (width1-150)/2 + 20, height1);
+            this.pictureBox3.Location = new System.Drawing.Point(2 * width1 + (width1-150)/2, height1);
+            this.pictureBox4.Location = new System.Drawing.Point(3 * width1 + (width1-150)/2 - 20, height1);
+            this.pictureBox5.Location = new System.Drawing.Point(4 * width1 + (width1-150)/2 - 40, height1);
+
+            int height2 = screenHeight * 63 / 100;
+            int left2 = 300;
+            this.pictureBox_star1.Location = new System.Drawing.Point(screenWidth / 2 - left2, height2);
+            this.pictureBox_star2.Location = new System.Drawing.Point(screenWidth / 2 - 75, height2);
+            this.pictureBox_star3.Location = new System.Drawing.Point(screenWidth / 2 + left2 - 150, height2);
+            //global::RueHelper.Properties.Resources.star;
+
+            this.label1.Location = new System.Drawing.Point((screenWidth - label1.Size.Width) / 2, height1 - 90);
+            this.label2.Location = new System.Drawing.Point((screenWidth - label1.Size.Width) / 2, height2 - 90);
+            this.label3.Location = new System.Drawing.Point((screenWidth - label3.Size.Width) / 2, height2);
+            this.label3.Visible = false;
+            {
+                Bitmap image = new Bitmap(pictureBox_star1.Size.Width, pictureBox_star1.Size.Height);
+                Graphics device = Graphics.FromImage(image);
+                device.DrawImage(pictureBox_star1.Image, 30, 62); //用你想要的位置画picturebox2
+                pictureBox_star1.Image = image;
+            }
+            {
+                Bitmap image = new Bitmap(pictureBox_star2.Size.Width, pictureBox_star2.Size.Height);
+                Graphics device = Graphics.FromImage(image);
+                device.DrawImage(pictureBox_star2.Image, 30, 62); //用你想要的位置画picturebox2
+                pictureBox_star2.Image = image;
+            }
+            {
+                Bitmap image = new Bitmap(pictureBox_star3.Size.Width, pictureBox_star3.Size.Height);
+                Graphics device = Graphics.FromImage(image);
+                device.DrawImage(pictureBox_star3.Image, 30, 62); //用你想要的位置画picturebox2
+                pictureBox_star3.Image = image;
+            }
+
+        }
+
+        public string ShowSummary()
+        {
+            if(Global.getSummaryType()==2)
+            {
+                this.Hide();
+            }
+
+            this.label3.Visible = false;
+
+            LessonSummary obj = IntelligentRecommend.m_summary;
+            string ret = IntelligentRecommend.m_summary.toJson();
+
+            for(int i=1; i<6;i++)
+            {
+                Label lbTop = new Label();//创建一个label
+                Label lbBottom = new Label();//创建一个label
+
+                if (i == 1)
+                {
+                    lbTop.Parent = pictureBox1;//指定父级
+                    lbBottom.Parent = pictureBox1;//指定父级
+                    lbTop.Text = "课堂资源";
+                    lbBottom.Text = obj.resource+"";
+                }
+                else if (i == 2)
+                {
+                    lbTop.Parent = pictureBox2;//指定父级
+                    lbBottom.Parent = pictureBox2;//指定父级
+                    lbTop.Text = "互动次数";
+                    lbBottom.Text = obj.actcount+"";
+                }
+                else if (i == 3)
+                {
+                    lbTop.Parent = pictureBox3;//指定父级
+                    lbBottom.Parent = pictureBox3;//指定父级
+                    lbTop.Text = "互动参与率";
+                    lbBottom.Text = obj.actratio;
+                }
+                else if (i == 4)
+                {
+                    lbTop.Parent = pictureBox4;//指定父级
+                    lbBottom.Parent = pictureBox4;//指定父级
+                    lbTop.Text = "点名覆盖率";
+                    lbBottom.Text = obj.callnameratio;
+                }
+                else if (i == 5)
+                {
+                    lbTop.Parent = pictureBox5;//指定父级
+                    lbBottom.Parent = pictureBox5;//指定父级
+                    lbTop.Text = "课堂奖励";
+                    lbBottom.Text = obj.rewardcount+"";
+                }
+
+                lbTop.Size = new System.Drawing.Size(152, 51);
+                lbTop.BackColor = Color.Transparent;
+                lbTop.ForeColor = System.Drawing.Color.White;
+                //lb.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(68)))), ((int)(((byte)(176)))), ((int)(((byte)(102)))));
+                lbTop.Font = new System.Drawing.Font("微软雅黑", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+                lbTop.Location = new Point(0, 0);//在pictureBox1中的坐标
+                lbTop.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+
+                lbBottom.Size = new System.Drawing.Size(152, 51);
+                lbBottom.BackColor = Color.Transparent;
+                lbBottom.ForeColor = System.Drawing.Color.Black;
+                //lb.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(68)))), ((int)(((byte)(176)))), ((int)(((byte)(102)))));
+                lbBottom.Font = new System.Drawing.Font("微软雅黑", 18F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+                lbBottom.Location = new Point(0, 50);//在pictureBox1中的坐标
+                lbBottom.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            }
+
+            if (obj.star1 == 0)
+                pictureBox_star1.Visible = false;
+            else
+                pictureBox_star1.Visible = true;
+
+            if (obj.star2 == 0)
+                pictureBox_star2.Visible = false;
+            else
+                pictureBox_star2.Visible = true;
+
+            if (obj.star3 == 0)
+                pictureBox_star3.Visible = false;
+            else
+                pictureBox_star3.Visible = true;
+
+            int height2 = screenHeight * 63 / 100;
+            int left2 = 300;
+            if (obj.star1 > 0 && obj.star2 > 0 && obj.star3==0)
+            {
+                this.pictureBox_star1.Location = new System.Drawing.Point(screenWidth / 2 - 200, height2);
+                this.pictureBox_star2.Location = new System.Drawing.Point(screenWidth / 2 + 200 - 150, height2);
+            }
+            else if (obj.star1 > 0 && obj.star2 == 0 && obj.star3 == 0)
+            {
+                this.pictureBox_star1.Location = new System.Drawing.Point(screenWidth / 2 - 75, height2);
+            }
+            else if (obj.star1 > 0 && obj.star2 > 0 && obj.star3 > 0)
+            {
+                this.pictureBox_star1.Location = new System.Drawing.Point(screenWidth / 2 - left2, height2);
+                this.pictureBox_star2.Location = new System.Drawing.Point(screenWidth / 2 - 75, height2);
+                this.pictureBox_star3.Location = new System.Drawing.Point(screenWidth / 2 + left2 - 150, height2);
+            }
+            else if (obj.star1 == 0 && obj.star2 == 0 && obj.star3 == 0)
+            {
+                label3.Visible = true;
+            }
+
+            for (int i = 1; i < 4; i++)
+            {
+
+                Label lbTop = new Label();//创建一个label
+                Label lbBottom = new Label();//创建一个label
+
+                if (i == 1)
+                {
+                    lbTop.Parent = pictureBox_star1;//指定父级
+                    lbBottom.Parent = pictureBox_star1;//指定父级
+                    lbTop.Text = obj.starname1;
+                    if (obj.star1 > 0)
+                        lbBottom.Text = "×" + obj.star1;
+                    else
+                        lbBottom.Text = "";
+                }
+                else if (i == 2)
+                {
+                    lbTop.Parent = pictureBox_star2;//指定父级
+                    lbBottom.Parent = pictureBox_star2;//指定父级
+                    lbTop.Text = obj.starname2;
+                    if (obj.star2 > 0)
+                        lbBottom.Text = "×" + obj.star2;
+                    else
+                        lbBottom.Text = "";
+                }
+                else if (i == 3)
+                {
+                    lbTop.Parent = pictureBox_star3;//指定父级
+                    lbBottom.Parent = pictureBox_star3;//指定父级
+                    lbTop.Text = obj.starname3;
+                    if (obj.star3 > 0)
+                        lbBottom.Text = "×" + obj.star3;
+                    else
+                        lbBottom.Text = "";
+                }
+
+                lbTop.Size = new System.Drawing.Size(152, 51);
+                lbTop.BackColor = Color.Transparent;
+                //lbTop.ForeColor = System.Drawing.Color.Black;
+                lbTop.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(68)))), ((int)(((byte)(176)))), ((int)(((byte)(102)))));
+                lbTop.Font = new System.Drawing.Font("微软雅黑", 28F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+                lbTop.Location = new Point(0, 0);//在pictureBox1中的坐标
+                lbTop.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+
+
+                lbBottom.Size = new System.Drawing.Size(152, 51);
+                lbBottom.BackColor = Color.Transparent;
+                lbBottom.ForeColor = System.Drawing.Color.Black;
+                lbBottom.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(68)))), ((int)(((byte)(176)))), ((int)(((byte)(102)))));
+                lbBottom.Font = new System.Drawing.Font("微软雅黑", 28F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
+                lbBottom.Location = new Point(20, 50);//在pictureBox1中的坐标
+                lbBottom.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            }
+
+            return ret;
+        }
+    }
+}

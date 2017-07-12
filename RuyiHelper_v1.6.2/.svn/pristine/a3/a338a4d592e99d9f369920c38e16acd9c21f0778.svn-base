@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+    <startup> 
+        <supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.0"/>
+    </startup>
+  <appSettings>
+    <add key="schoolid" value="33"/>
+    <add key="classroomid" value="1356"/>
+    <add key="hdip" value="172.18.2.111"/>
+    <add key="hdip-autoupdate" value="false"/>
+    <add key="host" value="apitest.radaredu.cn"/>
+  </appSettings>
+
+</configuration>

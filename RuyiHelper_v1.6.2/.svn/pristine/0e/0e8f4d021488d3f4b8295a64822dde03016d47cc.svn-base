@@ -1,0 +1,459 @@
+﻿//#define DEBUG
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Configuration;
+using System.Diagnostics;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading;
+using NetFwTypeLib;
+using Microsoft.Win32;
+using System.Net;
+using System.Security.Permissions;
+using RueHelper.util;
+
+
+
+namespace RueHelper
+{
+    static class Program
+    {
+        public static System.Threading.Mutex mutex;
+        private static log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+        /// <summary>
+        /// 应用程序的主入口点。
+        /// </summary>
+        [STAThread]
+        static void Main(string[] argv)
+        {
+            Log.Info("Add ContextMenu...");
+            AddFileContextMenuItem("添加到如e课堂", Application.StartupPath+"\\RueMng.exe %1");
+
+            Log.Info("Add NetFWPolicy...");
+            //添加防火墙例外策略
+            NetFwAddApps("如e小助手_APP", Application.ExecutablePath);
+            NetFwAddPorts("如e小助手_8986", 8986, "TCP");
+            NetFwAddPorts("如e小助手_8989", 8989, "TCP");
+
+
+            //TODO:弹出配置页面
+            string args = "";
+            if (argv.Length == 1)
+            {
+                args = argv[0];
+            }else{
+                if(CheckRun())
+                {
+                    Exit();
+                    return;
+                }
+                else
+                {
+                    SetRun();
+                }
+            }
+
+            System.Security.Principal.WindowsIdentity identity = System.Security.Principal.WindowsIdentity.GetCurrent();
+            Application.EnableVisualStyles();
+            System.Security.Principal.WindowsPrincipal principal = new System.Security.Principal.WindowsPrincipal(identity);
+            if (principal.IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator))
+            {
+                if (Init())
+                {
+                    //加载班级数据
+                    Thread thread_update = new Thread(delegate()
+                    {
+                        Update();
+                    });
+                    thread_update.Start();
+
+                    Log.Info("new Form1() now...");
+                    Application.EnableVisualStyles();
+                    Application.Run(new Form1());
+                    //Form1.Form1_Load 会启动Http服务
+                }
+            }
+            else
+            {
+                Log.Info("lack of Principal. ");
+                try
+                {
+                    System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
+                    startInfo.FileName = System.Windows.Forms.Application.ExecutablePath;
+                    startInfo.Verb = "runas";
+                    startInfo.Arguments = "-force";
+                    Log.Info("System.Diagnostics.Process.Start(startInfo)");
+                    System.Diagnostics.Process.Start(startInfo);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("如e小助手启动失败!", "提示");
+                    Log.Info(ex.Message);
+                }
+                finally
+                {
+                    Log.Info("Old process exit.");
+                    Exit();
+                }
+            }
+        }
+
+        
+        /// <summary>
+        /// 判断程序是否已经启动
+        /// </summary>
+        /// <returns></returns>
+        private static bool CheckRun()
+        {
+            bool createdNew = true;
+            // mutex = new System.Threading.Mutex(true, "_Mutex_RuyiHelper_", out createdNew);//这种在系统多用户下，每个用户能启动一个程序进程。
+            mutex = new System.Threading.Mutex(true, "Global\\_Mutex_RuyiHelper_", out createdNew);//这种在系统中，不管几个用户，只能存在一个这样的程序进程
+            if (!createdNew)
+            {
+                ;// MessageBox.Show("如e小助手已启动.");
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        private static bool SetRun()
+        {
+            bool createdNew = true;
+            // mutex = new System.Threading.Mutex(true, "_Mutex_RuyiHelper_", out createdNew);//这种在系统多用户下，每个用户能启动一个程序进程。
+            mutex = new System.Threading.Mutex(true, "Global\\_Mutex_RuyiHelper_", out createdNew);//这种在系统中，不管几个用户，只能存在一个这样的程序进程
+            return createdNew;
+        }
+
+        private static void Exit()
+        {
+            try
+            {
+                System.Windows.Forms.Application.Exit();
+
+                Log.Info("Program KillProcess now.");
+                Process p = Process.GetCurrentProcess();
+                if (p != null)
+                {
+                    p.Kill();
+                }
+            }
+            catch (Exception e) { Log.Error(e.Message); }
+            
+        }
+
+        private static bool Init()
+        {
+            try
+            {
+                Global global = new Global();
+                //Object referene not set to an instanceof an object
+                //加载班级数据
+                Thread thread_loadClassInfo = new Thread(delegate()
+                {
+                    Global.loadSchoolInfo();
+                    Global.loadClassInfo();
+                });
+                thread_loadClassInfo.Start();
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("配置文件错误，请确认无误后再重新启动程序！\r\n(" + e.Message+")", "警告");
+                return false;
+            }
+            int nSchoolID = Global.getSchoolID();
+            int nClassID = Global.getClassID();
+            string assistanturl = Global.url_assistant;
+            if (nSchoolID == 0 || nClassID == 0)
+            {
+                MessageBox.Show("请先进行学校参数的配置，谢谢！");
+                return false;
+            }
+            Log.Info("nSchoolID=" + nSchoolID + ", nClassID=" + nClassID);
+            return true;
+        }
+        private static void CheckUpdate()
+        {
+            string update = Application.StartupPath + "\\RueUpdate.exe";
+            string update2 = Application.StartupPath + "\\RueUpdate2.exe";
+
+            if (File.Exists(update2))
+            {
+                File.Copy(update2, update, true);
+                File.Delete(update2);
+            }
+
+            Process.Start(update);//打开主程序Main.exe
+        }
+
+        private static void Update()
+        {
+            string versionC = Global.getVersion();
+            string versionS = "";
+            string url = "http://" + Global.HOST + "/user.do?action=update&schoolid=" + Global.getSchoolID() + "&classid=" + Global.getClassID() + "&version=" + Global.getVersion();
+            //string json = HTTPReq.doGet(url,1000);
+            string json = HTTPReq.HttpGet(url);
+            if (json.Length == 0)
+                return;
+            Log.Info("Update, ret=" + json);
+            try
+            {
+                UpdateInfo resp = JsonOper.DeserializeJsonToObject<UpdateInfo>(json.Replace("(", "").Replace(")", ""));
+                if (resp == null)
+                    return;
+
+
+                foreach (UpdateItem item in resp.updateinfolist)
+                {
+                    Log.Info(item.toJson());
+                    if (item.type == 1)//
+                    {
+                        versionS = item.version;
+                        Log.Info("versionC=" + versionC + ", versionS=" + versionS);
+                        string[] szVerS = versionS.Split('.');
+                        string[] szVerC = versionC.Split('.');
+                        string zipurl = item.path;
+                        bool bUpdate = false;
+                        for (int i = 0; i < szVerS.Length; i++)
+                        {
+                            int nS = Util.toInt(szVerS[i]);
+                            int nC = Util.toInt(szVerC[i]);
+                            if (nS > nC)
+                            {
+                                bUpdate = true;
+                                break;
+                            }
+                            else if (nS < nC)
+                            {
+                                return;
+                            }
+                            else
+                            {
+                                continue;
+                            }
+                        }
+
+                        if (bUpdate)
+                        {
+                            string update = Application.StartupPath + "\\RueUpdate.exe";
+                            string update2 = Application.StartupPath + "\\RueUpdate2.exe";
+                            Log.Info(update);
+                            Log.Info(update2);
+                            if (File.Exists(update2))
+                            {
+                                Log.Info("copy...");
+                                KillProcess("RueUpdate.exe");
+                                try
+                                {
+                                    File.Delete(update);
+                                    File.Copy(update2, update, true);
+                                    Log.Info("delete update2...");
+                                    File.Delete(update2);
+                                }
+                                catch (Exception e)
+                                {
+                                    Log.Info("File.copy(update2,update) and File.Delete exception. " + e.Message);
+                                }
+                            }
+                            else if (File.Exists(update))
+                            {
+                                string param = versionS + " " + zipurl;
+                                Log.Info("run update.exe now..." + param);
+                                Process.Start(update, param);
+                            }
+                        }
+                    }
+                    else if (item.type == 2)
+                    {
+                        Global.setRyktUpdateInfo(item);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error(e.Message);
+            }
+        }
+
+        private static void KillProcess(string processName)
+        {
+            Log.Info("KillProcess " + processName);
+            Process[] myproc = Process.GetProcesses();
+            foreach (Process item in myproc)
+            {
+                if (item.ProcessName == processName || (item.ProcessName + ".exe") == processName)
+                {
+                    Log.Info("KillProcess now. " + item.ProcessName);
+                    item.Kill();
+                    Log.Info("KillProcess over. " + item.ProcessName);
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// 添加防火墙例外端口
+        /// </summary>
+        /// <param name="name">名称</param>
+        /// <param name="port">端口</param>
+        /// <param name="protocol">协议(TCP、UDP)</param>
+        public static void NetFwAddPorts(string name, int port, string protocol)
+        {
+            Log.Info("NetFwAddPorts now...");
+            try
+            {
+                //创建firewall管理类的实例
+                INetFwMgr netFwMgr = (INetFwMgr)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FwMgr"));
+
+                INetFwOpenPort objPort = (INetFwOpenPort)Activator.CreateInstance(
+                    Type.GetTypeFromProgID("HNetCfg.FwOpenPort"));
+
+                objPort.Name = name;
+                objPort.Port = port;
+                if (protocol.ToUpper() == "TCP")
+                {
+                    objPort.Protocol = NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_TCP;
+                }
+                else
+                {
+                    objPort.Protocol = NET_FW_IP_PROTOCOL_.NET_FW_IP_PROTOCOL_UDP;
+                }
+                objPort.Scope = NET_FW_SCOPE_.NET_FW_SCOPE_ALL;
+                objPort.Enabled = true;
+
+                bool exist = false;
+                //加入到防火墙的管理策略
+                foreach (INetFwOpenPort mPort in netFwMgr.LocalPolicy.CurrentProfile.GloballyOpenPorts)
+                {
+                    if (objPort == mPort)
+                    {
+                        exist = true;
+                        break;
+                    }
+                }
+                if (!exist) netFwMgr.LocalPolicy.CurrentProfile.GloballyOpenPorts.Add(objPort);
+            }
+            catch (Exception e)
+            {
+                Log.Error("NetFwAddPorts exception. " + e.Message);
+            }
+
+            Log.Info("NetFwAddPorts over...");
+        }
+        /// <summary>
+        /// 将应用程序添加到防火墙例外
+        /// </summary>
+        /// <param name="name">应用程序名称</param>
+        /// <param name="executablePath">应用程序可执行文件全路径</param>
+        public static void NetFwAddApps(string name, string executablePath)
+        {
+            Log.Info("NetFwAddApps now...");
+            //创建firewall管理类的实例
+            try
+            {
+                INetFwMgr netFwMgr = (INetFwMgr)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FwMgr"));
+
+                INetFwAuthorizedApplication app = (INetFwAuthorizedApplication)Activator.CreateInstance(
+                    Type.GetTypeFromProgID("HNetCfg.FwAuthorizedApplication"));
+
+                //在例外列表里，程序显示的名称
+                app.Name = name;
+
+                //程序的路径及文件名
+                app.ProcessImageFileName = executablePath;
+
+                //是否启用该规则
+                app.Enabled = true;
+
+                //加入到防火墙的管理策略
+                netFwMgr.LocalPolicy.CurrentProfile.AuthorizedApplications.Add(app);
+            }
+            catch (Exception e)
+            {
+                Log.Error("NetFwAddApps exception. " + e.Message);
+            }
+            Log.Info("NetFwAddApps over...");
+            //bool exist = false;
+            ////加入到防火墙的管理策略
+            //foreach (INetFwAuthorizedApplication mApp in netFwMgr.LocalPolicy.CurrentProfile.AuthorizedApplications)
+            //{
+            //    if (app == mApp)
+            //    {
+            //        exist = true;
+            //        break;
+            //    }
+            //}
+            //if (!exist) netFwMgr.LocalPolicy.CurrentProfile.AuthorizedApplications.Add(app);
+        }
+
+        private static void AddFileContextMenuItem(string itemName, string associatedProgramFullPath)
+        {
+            //创建项：shell 
+            try
+            {
+                RegistryKey shellKey = Registry.ClassesRoot.OpenSubKey(@"*\shell", true);
+                if (shellKey == null)
+                {
+                    shellKey = Registry.ClassesRoot.CreateSubKey(@"*\shell");
+                }
+
+                //创建项：右键显示的菜单名称
+                RegistryKey rightCommondKey = shellKey.CreateSubKey(itemName);
+                RegistryKey associatedProgramKey = rightCommondKey.CreateSubKey("command");
+
+                //创建默认值：关联的程序
+                associatedProgramKey.SetValue(string.Empty, associatedProgramFullPath);
+
+                //刷新到磁盘并释放资源
+                associatedProgramKey.Close();
+                rightCommondKey.Close();
+                shellKey.Close();
+            }
+            catch (Exception e)
+            {
+                Log.Error("Add ContextMenu Exception. "+  e.Message);
+            }
+            finally
+            {
+            }
+
+        }
+
+        private static void AddDirectoryContextMenuItem(string itemName, string associatedProgramFullPath)
+        {
+            //创建项：shell 
+            RegistryKey shellKey = Registry.ClassesRoot.OpenSubKey(@"directory\shell", true);
+            if (shellKey == null)
+            {
+                shellKey = Registry.ClassesRoot.CreateSubKey(@"*\shell");
+            }
+
+            //创建项：右键显示的菜单名称
+            RegistryKey rightCommondKey = shellKey.CreateSubKey(itemName);
+            RegistryKey associatedProgramKey = rightCommondKey.CreateSubKey("command");
+
+            //创建默认值：关联的程序
+            associatedProgramKey.SetValue("", associatedProgramFullPath);
+
+
+            //刷新到磁盘并释放资源
+            associatedProgramKey.Close();
+            rightCommondKey.Close();
+            shellKey.Close();
+        }
+
+    }
+
+
+        
+        
+ 
+}
