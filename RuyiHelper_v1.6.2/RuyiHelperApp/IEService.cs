@@ -415,6 +415,10 @@ namespace RueHelper
         [OperationContract]
         [WebInvoke(Method = "GET", ResponseFormat = WebMessageFormat.Json)]
         string EnterScore(string groupnum, string scorenum);
+
+        [OperationContract]
+        [WebInvoke(Method = "GET", ResponseFormat = WebMessageFormat.Json)]
+        string GroupRace(string rid, string ctime, string duration, string result, string nums);
         #endregion
 
         #region 抢答

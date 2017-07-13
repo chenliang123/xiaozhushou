@@ -1139,6 +1139,13 @@ namespace RueHelper
             }
             return "success";
         }
+
+        public string GroupRace(string rid,string ctime,string duration,string result,string nums)
+        {
+            string data = "rid=" + rid + "&ctime=" + ctime + "&duration=" + duration + "&result=" + result + "&nums=" + nums;
+            Common.uploadGroupResult(data);
+            return "success";
+        }
         #endregion
 
 

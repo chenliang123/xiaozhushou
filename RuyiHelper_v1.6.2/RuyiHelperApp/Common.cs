@@ -109,6 +109,11 @@ namespace RueHelper
             QD_data += "&attendStu=" + attendStu;
             doPostAsync("Competitive", QD_data);
         }
+        public static void uploadGroupResult(string data)
+        {
+            ////异步同步到云服务
+            doPostAsync("GroupRace", data);
+        }
         public static void uploadHandon(string rid,string createtime, string handon, string callname, string reward, string criticize, string handonRepeated, int timediff)
         {
             ////异步同步到云服务
